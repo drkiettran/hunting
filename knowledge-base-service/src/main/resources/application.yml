@@ -1,0 +1,84 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: knowledge-base-service
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/persistent_hunt_system
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: knowledge-base-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.persistenthunt.*"
+
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.persistenthunt.knowledge: DEBUG
+
+# Storage configuration
+storage:
+  type: local  # Options: local, s3
+  local:
+    path: ./uploads
+  s3:
+    bucket: persistent-hunt-artifacts
+
+# AWS configuration (if using S3)
+aws:
+  region: us-east-1
+  accessKey: 
+  secretKey: 
+  s3:
+    endpoint:  # Leave empty for AWS S3, set for LocalStack
+
+# Elasticsearch configuration
+elasticsearch:
+  enabled: true
+  host: localhost
+  port: 9200
+  scheme: http

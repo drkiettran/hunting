@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    
+  session:
+    store-type: redis
+    timeout: 86400
+
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "http://localhost:*,https://localhost:*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.persistenthunt.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+
+jwt:
+  secret: MySecretKeyForPersistentHuntSystemThatIsLongEnough
+  expiration: 86400

@@ -1,0 +1,92 @@
+
+server:
+  port: 8083
+
+spring:
+  application:
+    name: detection-analytics-service
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/persistent_hunt_system
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: detection-analytics-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.persistenthunt.*"
+
+  quartz:
+    job-store-type: jdbc
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: DetectionAnalyticsScheduler
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            tablePrefix: QRTZ_
+            useProperties: false
+          threadPool:
+            threadCount: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.persistenthunt.analytics: DEBUG
+
+# Platform integration settings
+platforms:
+  elastic:
+    host: http://localhost:9200
+    username: elastic
+    password: changeme
+    index-pattern: "logs-*"
+  databricks:
+    host: https://databricks.company.com
+    token: your-databricks-token
+    cluster-id: your-cluster-id
+
+# Analytics execution settings
+analytics:
+  execution:
+    enabled: true
+    interval-minutes: 5
+    max-parallel-executions: 10
+    timeout-minutes: 30
