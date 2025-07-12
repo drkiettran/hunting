@@ -1,0 +1,102 @@
+@startuml
+'!theme plain
+title Persistent Hunt System - Simplified Deployment Diagram
+
+' Define security zones
+package "DMZ" {
+  node "Load Balancer" as LB {
+    artifact "HAProxy + SSL" as HAProxy
+  }
+}
+
+package "Internal Network" {
+  
+  ' Core Analytics Platform
+  node "Analytics Platform" as Analytics <<cluster>> {
+    artifact "Elastic Stack" as Elastic
+    artifact "Databricks" as Databricks
+    database "Analytics Data" as AnalyticsDB
+  }
+  
+  ' Workflow & Knowledge Management
+  node "Management Platform" as Management <<cluster>> {
+    artifact "ServiceNow" as ServiceNow
+    artifact "Knowledge Base" as KB
+    database "Operational Data" as OpDB
+  }
+  
+  ' High-availability database cluster
+  node "Database Cluster" as DBCluster <<cluster>> {
+    database "Primary DB" as PrimaryDB
+    database "Replica DB" as ReplicaDB
+  }
+}
+
+' External systems
+cloud "AWS Cloud" as AWS {
+  database "S3 Storage" as S3 <<archive>>
+}
+
+node "External Sources" as External <<external>> {
+  artifact "Threat Intelligence" as TI
+  artifact "Network Data" as NetworkData
+}
+
+' User access
+actor "Analysts" as Users <<multiple>>
+
+' Simplified connections with clear data flow
+External --> LB : threat data\n& network logs
+Users --> LB : HTTPS/443
+LB --> Analytics : analysis requests
+LB --> Management : workflow access
+
+Analytics <--> Management : alerts & coordination
+Analytics <--> DBCluster : data storage
+Management <--> DBCluster : operational data
+Management --> S3 : artifact archival
+Analytics --> S3 : data backup
+
+' Critical notes
+note right of Analytics : Auto-scaling cluster\n• Elastic (detection)\n• Databricks (ML analytics)
+note right of Management : Workflow orchestration\n• ServiceNow (tickets)\n• Knowledge Base (artifacts)
+note right of S3 : Long-term storage\n• Multi-region backup\n• Compliance archival
+note bottom of External : Rate-limited feeds\n• TI sources\n• Network sensors
+
+' Styling for visual hierarchy
+skinparam package {
+  BackgroundColor lightcyan
+  BorderColor darkblue
+  FontSize 14
+}
+
+skinparam node {
+  BackgroundColor lightblue
+  BorderColor darkblue
+  FontSize 12
+}
+
+skinparam artifact {
+  BackgroundColor lightyellow
+  BorderColor orange
+  FontSize 10
+}
+
+skinparam database {
+  BackgroundColor lightgreen
+  BorderColor darkgreen
+  FontSize 10
+}
+
+skinparam cloud {
+  BackgroundColor lightgray
+  BorderColor gray
+  FontSize 12
+}
+
+skinparam actor {
+  BackgroundColor pink
+  BorderColor red
+  FontSize 12
+}
+@enduml

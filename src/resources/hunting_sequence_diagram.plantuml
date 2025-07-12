@@ -1,0 +1,130 @@
+@startuml
+'!theme plain
+title Persistent Hunt System - Sequence Diagram
+
+' Define participants
+participant "Threat Intelligence\nSource" as TI
+participant "Tier 3 Analyst" as T3
+participant "Elastic Platform" as Elastic
+participant "Databricks Platform" as Databricks
+participant "SIEM Dashboard" as SIEM
+participant "ServiceNow" as SN
+participant "Tier 1 Analyst" as T1
+participant "Tier 2 Analyst" as T2
+participant "Production Staff" as Prod
+participant "Knowledge Base" as KB
+
+' Activation boxes
+activate TI
+activate T3
+activate Elastic
+activate Databricks
+
+== Threat Identification & Detection Creation ==
+TI -> T3 : Report new adversary TTP
+note right : New threat intelligence\nfrom multiple sources
+T3 -> T3 : Analyze threat patterns
+T3 -> Elastic : Create detection analytic
+T3 -> Databricks : Create detection analytic
+note right : Analytics created based\non observed behaviors
+
+== Continuous Monitoring & Detection ==
+loop Continuous Monitoring
+    Elastic -> Elastic : Run automated detection\non visibility data
+    Databricks -> Databricks : Run automated detection\non visibility data
+    
+    alt Detection Triggered
+        Elastic -> SIEM : Send detection alert
+        Databricks -> SIEM : Send detection alert
+        SIEM -> SIEM : Aggregate & triage alerts
+        
+        alt Critical Threshold Met
+            SIEM -> SN : Auto-create critical ticket
+            activate SN
+            SN -> T1 : Notify of critical alert
+        else Normal Alert
+            SIEM -> T1 : Display in dashboard
+        end
+    end
+end
+
+== Tier 1 Investigation ==
+activate T1
+T1 -> SN : Create/Update ticket
+T1 -> Elastic : Investigate event details
+T1 -> Elastic : Pivot across datasets
+T1 -> SN : Document findings in ticket
+
+alt Requires Escalation
+    T1 -> SN : Assign ticket to Tier 2
+    T1 -> T2 : Notify of escalation
+    deactivate T1
+else Investigation Complete
+    T1 -> SN : Close ticket
+    deactivate T1
+end
+
+== Tier 2 Deep Analysis ==
+activate T2
+T2 -> SN : Receive ticket notification
+T2 -> Databricks : Access full records
+T2 -> Databricks : Develop analysis notebooks
+T2 -> Elastic : Create investigation queries
+T2 -> SN : Update ticket with analysis
+
+alt Requires Production Response
+    T2 -> SN : Assign to Production Staff
+    T2 -> Prod : Notify for product development
+    
+    == Intelligence Product Development ==
+    activate Prod
+    Prod -> SN : Review ticket details
+    Prod -> SN : Create product workflow
+    Prod -> SN : Generate automated template
+    Prod -> SN : Develop intelligence product
+    Prod -> SN : Stage product for release
+    Prod -> SN : Coordinate response activities
+    Prod -> SN : Close production workflow
+    deactivate Prod
+    
+else Requires Enhanced Detection
+    T2 -> SN : Assign to Tier 3
+    T2 -> T3 : Notify for detection enhancement
+    
+    == Detection Enhancement ==
+    T3 -> SN : Receive enhancement request
+    T3 -> Databricks : Develop additional models
+    T3 -> Elastic : Deploy new analytics
+    T3 -> SN : Update ticket status
+    T3 -> KB : Archive analysis artifacts
+    T3 -> SN : Close ticket
+    
+else Investigation Complete
+    T2 -> SN : Close ticket
+end
+
+== Knowledge Management ==
+T2 -> KB : Archive analysis artifacts
+T2 -> SN : Close ticket
+deactivate T2
+
+== System Cleanup ==
+SN -> SN : Update case workflow status
+deactivate SN
+
+' Notes
+note over TI, KB : This sequence represents one complete cycle\nof the Persistent Hunt workflow
+note over Elastic, Databricks : Continuous monitoring runs\nindependently of investigations
+note over T1, T2 : Analysts can escalate or close\nbased on investigation findings
+
+' Styling
+skinparam participant {
+    BackgroundColor lightblue
+    BorderColor darkblue
+}
+skinparam note {
+    BackgroundColor lightyellow
+    BorderColor orange
+}
+
+@enduml

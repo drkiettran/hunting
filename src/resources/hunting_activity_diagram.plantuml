@@ -1,0 +1,109 @@
+@startuml
+!theme plain
+title Persistent Hunt System - Activity Diagram
+
+|#lightblue|Threat Intelligence|
+start
+:Threat Intelligence Source identifies\nnew adversary TTP;
+:Report new threat to system;
+
+|#lightgreen|Tier 3 Analyst|
+:Analyze threat intelligence;
+:Create detection analytics\nin Elastic/Databricks;
+:Deploy analytics to\nmonitoring systems;
+
+|#lightyellow|Automated Systems|
+:Monitor network, endpoints,\nand other telemetry;
+note right: Continuous automated process
+:Run detection analytics\non visibility data;
+
+if (Threat detected?) then (yes)
+  :Generate detection alert;
+  :Send alert to SIEM dashboard;
+  :Aggregate with similar alerts;
+  :Auto-triage events;
+  
+  if (Critical threshold exceeded?) then (yes)
+    :Create critical ticket\nin ServiceNow;
+    note right: Automated ticket creation
+  else (no)
+    :Add to investigation queue;
+  endif
+  
+  |#lightcoral|Tier 1 Analyst|
+  :Receive alert notification;
+  :Investigate event in Elastic;
+  :Pivot across datasets;
+  :Compile relevant data links;
+  :Update ServiceNow ticket;
+  
+  if (Requires deeper analysis?) then (yes)
+    :Assign ticket to Tier 2;
+    
+    |#lightpink|Tier 2 Analyst|
+    :Receive ticket notification;
+    :Access full records in Databricks;
+    :Develop analysis notebooks\nand queries;
+    :Perform deep investigation;
+    
+    if (Significant findings?) then (yes)
+      fork
+        :Assign to Production Staff;
+        |#lightsteelblue|Production Staff|
+        :Review investigation findings;
+        :Develop intelligence product;
+        :Create automated template\nin ServiceNow;
+        :Generate collateral using\nLLM and templates;
+        :Stage product for release;
+        :Coordinate with internal\nand external partners;
+        :Finalize and release product;
+        :Close production workflow;
+      fork again
+        :Assign to Tier 3 for\nanalytic enhancement;
+        |#lightgreen|Tier 3 Analyst|
+        :Review investigation data;
+        :Develop additional\ndetection models;
+        :Deploy new analytics\nto platforms;
+        :Test and validate\nnew detections;
+      end fork
+    endif
+    
+    :Archive analysis artifacts\nto Knowledge Base;
+    :Catalog lessons learned;
+    :Close investigation ticket;
+    
+  else (no)
+    |#lightcoral|Tier 1 Analyst|
+    :Close investigation;
+    :Update ticket status;
+  endif
+  
+else (no)
+  :Continue monitoring;
+endif
+
+|#lightyellow|System Maintenance|
+:Update Knowledge Base\nwith new artifacts;
+:Maintain detection\nanalytics library;
+
+stop
+
+' Styling
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  FontSize 11
+}
+
+skinparam note {
+  BackgroundColor lightyellow
+  BorderColor orange
+}
+
+' Color coding for different actors
+skinparam partition {
+  BorderColor black
+  FontSize 12
+}
+
+@enduml

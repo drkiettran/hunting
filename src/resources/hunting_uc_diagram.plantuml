@@ -1,0 +1,96 @@
+@startuml
+' !theme plain
+' !theme amiga
+
+title Persistent Hunt System - Use Case Diagram
+
+' Define primary actors
+actor "Threat Intelligence Source" as TI <<External>>
+actor "Tier 1 Analyst" as T1 <<Primary>>
+actor "Tier 2 Analyst" as T2 <<Primary>>
+actor "Tier 3 Analyst" as T3 <<Primary>>
+actor "Production Staff" as Prod <<Primary>>
+
+' Define secondary actors (systems)
+actor "Elastic Platform" as ElasticSys <<System>>
+actor "Databricks Platform" as DatabricksSys <<System>>
+actor "ServiceNow" as SNSys <<System>>
+actor "Knowledge Base" as KBSys <<System>>
+
+' System boundary
+rectangle "Persistent Hunt System" {
+  ' Core use cases
+  usecase "Identify New Threats" as UC1
+  usecase "Create Detection Analytics" as UC2
+  usecase "Monitor & Detect" as UC3
+  usecase "Investigate Alerts" as UC4
+  usecase "Perform Deep Analysis" as UC5
+  usecase "Develop Intelligence Products" as UC6
+  usecase "Enhance Detection Capabilities" as UC7
+  usecase "Manage Case Workflow" as UC8
+  usecase "Archive Knowledge" as UC9
+  
+  ' Specialized use cases
+  usecase "Triage Critical Events" as UC10
+  usecase "Coordinate Response" as UC11
+}
+
+' Primary actor relationships
+TI --> UC1 : reports
+T1 --> UC4 : performs
+T1 --> UC8 : initiates
+T2 --> UC5 : performs
+T2 --> UC8 : manages
+T2 --> UC9 : contributes
+T3 --> UC2 : creates
+T3 --> UC7 : enhances
+T3 --> UC9 : maintains
+Prod --> UC6 : develops
+Prod --> UC11 : coordinates
+
+' System actor relationships
+ElasticSys --> UC3 : executes
+ElasticSys --> UC4 : supports
+DatabricksSys --> UC3 : executes
+DatabricksSys --> UC5 : supports
+SNSys --> UC8 : manages
+SNSys --> UC11 : facilitates
+KBSys --> UC9 : stores
+
+' Use case relationships
+UC1 ..> UC2 : <<triggers>>
+UC2 ..> UC3 : <<enables>>
+UC3 ..> UC4 : <<generates>>
+UC4 ..> UC5 : <<escalates>>
+UC4 ..> UC10 : <<includes>>
+UC5 ..> UC6 : <<informs>>
+UC5 ..> UC7 : <<identifies needs>>
+UC8 ..> UC4 : <<coordinates>>
+UC8 ..> UC5 : <<coordinates>>
+UC8 ..> UC6 : <<coordinates>>
+
+' Extension relationships
+UC10 ..> UC8 : <<extends>>
+UC11 ..> UC6 : <<extends>>
+
+' Notes for clarification
+note right of UC3 : Automated process\nrunning continuously
+note right of UC10 : Only for events\nexceeding threshold
+note bottom of UC9 : Captures artifacts\nand lessons learned
+note left of TI : Includes CISA responders,\nindustry, external entities
+
+' Styling
+skinparam usecase {
+  BackgroundColor lightblue
+  BorderColor darkblue
+}
+skinparam actor {
+  BackgroundColor lightyellow
+  BorderColor darkred
+}
+skinparam rectangle {
+  BackgroundColor lightgray
+  BorderColor black
+}
+
+@enduml

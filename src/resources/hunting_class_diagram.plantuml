@@ -1,0 +1,311 @@
+@startuml
+' !theme plain
+title Persistent Hunt System - Class Diagram
+
+' Core Domain Classes
+class ThreatIntelligence {
+  - id: String
+  - source: String
+  - threatType: ThreatType
+  - ttp: String
+  - description: String
+  - severity: SeverityLevel
+  - discoveredDate: Date
+  - reportedBy: String
+  - indicators: List<Indicator>
+  + validate(): Boolean
+  + categorize(): ThreatCategory
+  + extractIndicators(): List<Indicator>
+}
+
+class DetectionAnalytic {
+  - id: String
+  - name: String
+  - description: String
+  - query: String
+  - platform: Platform
+  - threatIntelligenceId: String
+  - createdBy: String
+  - createdDate: Date
+  - lastModified: Date
+  - isActive: Boolean
+  - accuracy: Double
+  + deploy(): Boolean
+  + test(): TestResult
+  + updateQuery(newQuery: String): void
+  + deactivate(): void
+}
+
+class Alert {
+  - id: String
+  - analyticId: String
+  - timestamp: Date
+  - severity: SeverityLevel
+  - status: AlertStatus
+  - assignedTo: String
+  - description: String
+  - rawData: String
+  - falsePositive: Boolean
+  - indicators: List<Indicator>
+  + triage(): TriageResult
+  + escalate(): void
+  + resolve(): void
+  + markFalsePositive(): void
+}
+
+class Investigation {
+  - id: String
+  - caseId: String
+  - alertIds: List<String>
+  - assignedAnalyst: String
+  - tier: AnalystTier
+  - startDate: Date
+  - endDate: Date
+  - status: InvestigationStatus
+  - findings: String
+  - recommendations: String
+  - artifacts: List<Artifact>
+  + assignToTier(tier: AnalystTier): void
+  + addFindings(findings: String): void
+  + generateReport(): Report
+  + close(): void
+}
+
+class Case {
+  - id: String
+  - title: String
+  - description: String
+  - priority: Priority
+  - status: CaseStatus
+  - createdBy: String
+  - createdDate: Date
+  - lastUpdated: Date
+  - investigations: List<Investigation>
+  - tickets: List<Ticket>
+  + createTicket(): Ticket
+  + updateStatus(status: CaseStatus): void
+  + assignInvestigation(investigation: Investigation): void
+  + calculateRisk(): RiskLevel
+}
+
+class Ticket {
+  - id: String
+  - caseId: String
+  - title: String
+  - description: String
+  - priority: Priority
+  - status: TicketStatus
+  - assignedTo: String
+  - createdBy: String
+  - createdDate: Date
+  - dueDate: Date
+  - notes: List<Note>
+  + assign(analyst: String): void
+  + addNote(note: Note): void
+  + updateStatus(status: TicketStatus): void
+  + close(): void
+}
+
+class IntelligenceProduct {
+  - id: String
+  - title: String
+  - type: ProductType
+  - content: String
+  - author: String
+  - createdDate: Date
+  - publishedDate: Date
+  - classification: Classification
+  - tags: List<String>
+  - sources: List<String>
+  + draft(): void
+  + review(): ReviewResult
+  + publish(): void
+  + generateCollateral(): List<Collateral>
+}
+
+class Artifact {
+  - id: String
+  - name: String
+  - type: ArtifactType
+  - filePath: String
+  - description: String
+  - createdBy: String
+  - createdDate: Date
+  - tags: List<String>
+  - metadata: Map<String, String>
+  + store(): Boolean
+  + retrieve(): Object
+  + archive(): void
+  + addMetadata(key: String, value: String): void
+}
+
+' User Classes
+abstract class User {
+  - id: String
+  - username: String
+  - email: String
+  - role: Role
+  - isActive: Boolean
+  - lastLogin: Date
+  + authenticate(): Boolean
+  + hasPermission(permission: Permission): Boolean
+  + getAssignedCases(): List<Case>
+}
+
+class Analyst extends User {
+  - tier: AnalystTier
+  - specializations: List<String>
+  - casesHandled: Integer
+  - averageResolutionTime: Duration
+  + investigate(alert: Alert): Investigation
+  + escalateCase(caseId: String): void
+  + createAnalytic(): DetectionAnalytic
+}
+
+class ProductionStaff extends User {
+  - department: String
+  - clearanceLevel: String
+  + developProduct(investigation: Investigation): IntelligenceProduct
+  + reviewProduct(product: IntelligenceProduct): ReviewResult
+  + coordinateResponse(): void
+}
+
+' System Integration Classes
+class ElasticPlatform {
+  - endpoint: String
+  - apiKey: String
+  - indices: List<String>
+  + executeQuery(query: String): QueryResult
+  + storeData(data: Object): Boolean
+  + createIndex(name: String): void
+  + deployAnalytic(analytic: DetectionAnalytic): Boolean
+}
+
+class DatabricksPlatform {
+  - workspace: String
+  - cluster: String
+  - notebooks: List<String>
+  + runNotebook(notebook: String): NotebookResult
+  + createModel(data: Dataset): MLModel
+  + deployModel(model: MLModel): Boolean
+  + queryData(sql: String): DataFrame
+}
+
+class ServiceNowSystem {
+  - instanceUrl: String
+  - credentials: Credentials
+  + createTicket(ticket: Ticket): String
+  + updateTicket(ticketId: String, updates: Map): void
+  + getTicket(ticketId: String): Ticket
+  + triggerWorkflow(workflowId: String): void
+}
+
+class KnowledgeBase {
+  - storageLocation: String
+  - indexService: String
+  + storeArtifact(artifact: Artifact): Boolean
+  + searchArtifacts(query: String): List<Artifact>
+  + retrieveArtifact(id: String): Artifact
+  + archiveArtifact(id: String): void
+}
+
+' Enumeration Classes
+enum ThreatType {
+  MALWARE
+  PHISHING
+  APT
+  INSIDER_THREAT
+  VULNERABILITY
+  BOTNET
+}
+
+enum SeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  NEW
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  FALSE_POSITIVE
+}
+
+enum AnalystTier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum InvestigationStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING_REVIEW
+  CLOSED
+  ESCALATED
+}
+
+enum Platform {
+  ELASTIC
+  DATABRICKS
+  HYBRID
+}
+
+enum ProductType {
+  THREAT_REPORT
+  ADVISORY
+  BULLETIN
+  ALERT
+  BRIEFING
+}
+
+' Relationships
+ThreatIntelligence ||--o{ DetectionAnalytic : "triggers creation"
+DetectionAnalytic ||--o{ Alert : "generates"
+Alert ||--o{ Investigation : "initiates"
+Investigation }o--|| Case : "belongs to"
+Case ||--o{ Ticket : "creates"
+Investigation ||--o{ Artifact : "produces"
+Investigation }o--|| IntelligenceProduct : "informs"
+Artifact }o--|| KnowledgeBase : "stored in"
+
+User ||--o{ Case : "assigned to"
+User ||--o{ Investigation : "performs"
+User ||--o{ Ticket : "handles"
+
+ElasticPlatform ||--o{ DetectionAnalytic : "executes"
+DatabricksPlatform ||--o{ DetectionAnalytic : "executes"
+ServiceNowSystem ||--o{ Ticket : "manages"
+ServiceNowSystem ||--o{ Case : "tracks"
+
+' Composition relationships
+Case *-- Investigation
+Investigation *-- Artifact
+Ticket *-- Note
+IntelligenceProduct *-- Collateral
+
+' Aggregation relationships
+Alert o-- Indicator
+ThreatIntelligence o-- Indicator
+
+' Notes
+note top of ThreatIntelligence : Represents initial threat\ninformation from various sources
+note top of DetectionAnalytic : Contains logic for\nidentifying threats
+note top of Investigation : Tracks analysis workflow\nacross different tiers
+note right of KnowledgeBase : Integrates with AWS S3\nfor artifact storage
+
+' Styling
+skinparam class {
+  BackgroundColor lightblue
+  BorderColor darkblue
+  ArrowColor darkblue
+}
+skinparam enum {
+  BackgroundColor lightyellow
+  BorderColor darkred
+}
+
+@enduml

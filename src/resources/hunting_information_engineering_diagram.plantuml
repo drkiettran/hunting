@@ -1,0 +1,276 @@
+@startuml
+'!theme plain
+title Persistent Hunt System - Information Engineering Diagram (ERD)
+
+' Define entities with attributes
+entity "ThreatIntelligence" as TI {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * source : VARCHAR(100)
+  * threatType : ENUM
+  * ttp : TEXT
+  * description : TEXT
+  * severity : ENUM
+  * discoveredDate : TIMESTAMP
+  * reportedBy : VARCHAR(100)
+  createdDate : TIMESTAMP
+  lastModified : TIMESTAMP
+}
+
+entity "DetectionAnalytic" as DA {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * name : VARCHAR(200)
+  * description : TEXT
+  * query : TEXT
+  * platform : ENUM
+  * createdBy : VARCHAR(100)
+  * createdDate : TIMESTAMP
+  * lastModified : TIMESTAMP
+  * isActive : BOOLEAN
+  accuracy : DECIMAL(5,2)
+  threatIntelligenceId : VARCHAR(50) <<FK>>
+}
+
+entity "Alert" as AL {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * timestamp : TIMESTAMP
+  * severity : ENUM
+  * status : ENUM
+  * description : TEXT
+  * rawData : TEXT
+  assignedTo : VARCHAR(100)
+  falsePositive : BOOLEAN
+  analyticId : VARCHAR(50) <<FK>>
+}
+
+entity "Investigation" as INV {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * startDate : TIMESTAMP
+  * assignedAnalyst : VARCHAR(100)
+  * tier : ENUM
+  * status : ENUM
+  endDate : TIMESTAMP
+  findings : TEXT
+  recommendations : TEXT
+  caseId : VARCHAR(50) <<FK>>
+}
+
+entity "Case" as CS {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * title : VARCHAR(200)
+  * description : TEXT
+  * priority : ENUM
+  * status : ENUM
+  * createdBy : VARCHAR(100)
+  * createdDate : TIMESTAMP
+  * lastUpdated : TIMESTAMP
+  riskLevel : ENUM
+}
+
+entity "Ticket" as TK {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * title : VARCHAR(200)
+  * description : TEXT
+  * priority : ENUM
+  * status : ENUM
+  * createdBy : VARCHAR(100)
+  * createdDate : TIMESTAMP
+  assignedTo : VARCHAR(100)
+  dueDate : TIMESTAMP
+  caseId : VARCHAR(50) <<FK>>
+}
+
+entity "IntelligenceProduct" as IP {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * title : VARCHAR(200)
+  * type : ENUM
+  * content : TEXT
+  * author : VARCHAR(100)
+  * createdDate : TIMESTAMP
+  publishedDate : TIMESTAMP
+  classification : ENUM
+}
+
+entity "Artifact" as AR {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * name : VARCHAR(200)
+  * type : ENUM
+  * filePath : VARCHAR(500)
+  * description : TEXT
+  * createdBy : VARCHAR(100)
+  * createdDate : TIMESTAMP
+  investigationId : VARCHAR(50) <<FK>>
+}
+
+entity "User" as US {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * username : VARCHAR(100)
+  * email : VARCHAR(150)
+  * role : ENUM
+  * isActive : BOOLEAN
+  * lastLogin : TIMESTAMP
+  tier : ENUM
+  department : VARCHAR(100)
+  clearanceLevel : VARCHAR(50)
+}
+
+entity "Indicator" as IND {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * type : ENUM
+  * value : VARCHAR(500)
+  * description : TEXT
+  * confidence : DECIMAL(3,2)
+  * createdDate : TIMESTAMP
+}
+
+entity "Note" as NT {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * content : TEXT
+  * createdBy : VARCHAR(100)
+  * createdDate : TIMESTAMP
+  ticketId : VARCHAR(50) <<FK>>
+}
+
+entity "Tag" as TG {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * name : VARCHAR(100)
+  * category : VARCHAR(50)
+  * description : TEXT
+}
+
+entity "Platform" as PL {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * name : VARCHAR(100)
+  * type : ENUM
+  * endpoint : VARCHAR(200)
+  * configuration : TEXT
+  * isActive : BOOLEAN
+}
+
+entity "QueryResult" as QR {
+  * id : VARCHAR(50) <<PK>>
+  --
+  * queryText : TEXT
+  * resultData : TEXT
+  * executionTime : INTEGER
+  * timestamp : TIMESTAMP
+  * recordCount : INTEGER
+  platformId : VARCHAR(50) <<FK>>
+}
+
+' Junction/Association entities for many-to-many relationships
+entity "AlertIndicator" as AI {
+  * alertId : VARCHAR(50) <<PK,FK>>
+  * indicatorId : VARCHAR(50) <<PK,FK>>
+  --
+  relevanceScore : DECIMAL(3,2)
+  createdDate : TIMESTAMP
+}
+
+entity "ThreatIntelligenceIndicator" as TII {
+  * threatIntelligenceId : VARCHAR(50) <<PK,FK>>
+  * indicatorId : VARCHAR(50) <<PK,FK>>
+  --
+  confidence : DECIMAL(3,2)
+  createdDate : TIMESTAMP
+}
+
+entity "InvestigationAlert" as IA {
+  * investigationId : VARCHAR(50) <<PK,FK>>
+  * alertId : VARCHAR(50) <<PK,FK>>
+  --
+  analysisNotes : TEXT
+  createdDate : TIMESTAMP
+}
+
+entity "ProductSource" as PS {
+  * productId : VARCHAR(50) <<PK,FK>>
+  * sourceId : VARCHAR(50) <<PK,FK>>
+  --
+  sourceType : ENUM
+  createdDate : TIMESTAMP
+}
+
+entity "ArtifactTag" as AT {
+  * artifactId : VARCHAR(50) <<PK,FK>>
+  * tagId : VARCHAR(50) <<PK,FK>>
+  --
+  createdDate : TIMESTAMP
+}
+
+entity "ProductTag" as PT {
+  * productId : VARCHAR(50) <<PK,FK>>
+  * tagId : VARCHAR(50) <<PK,FK>>
+  --
+  createdDate : TIMESTAMP
+}
+
+' Define relationships
+TI ||--o{ DA : "triggers creation"
+DA ||--o{ AL : "generates"
+AL ||--o{ IA : "analyzed in"
+IA }o--|| INV : "part of"
+INV }o--|| CS : "belongs to"
+CS ||--o{ TK : "tracks"
+INV ||--o{ AR : "produces"
+INV }o--|| IP : "informs"
+US ||--o{ CS : "assigned to"
+US ||--o{ INV : "performs"
+US ||--o{ TK : "handles"
+TK ||--o{ NT : "contains"
+PL ||--o{ QR : "executes"
+PL ||--o{ DA : "runs on"
+
+' Many-to-many relationships through junction entities
+AL ||--o{ AI : ""
+AI }o--|| IND : ""
+TI ||--o{ TII : ""
+TII }o--|| IND : ""
+IP ||--o{ PS : ""
+PS }o--|| TI : ""
+AR ||--o{ AT : ""
+AT }o--|| TG : ""
+IP ||--o{ PT : ""
+PT }o--|| TG : ""
+
+' Additional relationships
+US ||--o{ DA : "creates"
+US ||--o{ IP : "authors"
+US ||--o{ AR : "creates"
+US ||--o{ NT : "writes"
+
+' Cardinality and participation constraints
+note right of TI : External threat intelligence\nfrom various sources
+note right of DA : Detection rules deployed\non analytics platforms
+note right of AL : Generated alerts from\nautomated detection
+note right of INV : Analysis workflow across\ndifferent analyst tiers
+note right of CS : Case management for\ntracking investigations
+note right of IP : Final intelligence products\nfor dissemination
+note right of AR : Analysis artifacts stored\nin knowledge base
+note right of US : System users with\nrole-based access
+
+' Styling
+skinparam entity {
+  BackgroundColor lightblue
+  BorderColor darkblue
+  FontSize 10
+}
+
+skinparam enum {
+  BackgroundColor lightyellow
+  BorderColor orange
+}
+
+@enduml

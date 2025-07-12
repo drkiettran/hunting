@@ -1,0 +1,119 @@
+@startuml
+'!theme plain
+title Persistent Hunt System - Threat Detection Case State Diagram
+
+' Define states
+state "Initial" as Initial
+state "Threat Identified" as ThreatID
+state "Analytics Created" as AnalyticsCreated
+state "Monitoring Active" as MonitoringActive
+state "Alert Generated" as AlertGenerated
+state "Triaged" as Triaged
+state "Under Investigation (T1)" as InvestigationT1
+state "Escalated to T2" as EscalatedT2
+state "Deep Analysis" as DeepAnalysis
+state "Escalated to T3" as EscalatedT3
+state "Escalated to Production" as EscalatedProd
+state "Enhanced Analytics" as EnhancedAnalytics
+state "Product Development" as ProductDev
+state "Response Coordinated" as ResponseCoordinated
+state "Knowledge Archived" as KnowledgeArchived
+state "Case Closed" as CaseClosed
+
+' Composite states for parallel processes
+state "Active Monitoring" as ActiveMonitoring {
+  state "Continuous Detection" as ContinuousDetection
+  state "Alert Processing" as AlertProcessing
+  ContinuousDetection --> AlertProcessing : alert_triggered
+  AlertProcessing --> ContinuousDetection : alert_processed
+}
+
+state "Investigation Process" as InvestigationProcess {
+  state "Initial Assessment" as InitialAssessment
+  state "Evidence Collection" as EvidenceCollection
+  state "Analysis & Correlation" as AnalysisCorrelation
+  
+  InitialAssessment --> EvidenceCollection : evidence_found
+  EvidenceCollection --> AnalysisCorrelation : data_collected
+  AnalysisCorrelation --> InitialAssessment : need_more_data
+}
+
+' Initial transitions
+[*] --> Initial
+
+' Main workflow transitions
+Initial --> ThreatID : threat_reported[by TI source]
+ThreatID --> AnalyticsCreated : analytic_created[by T3]
+AnalyticsCreated --> MonitoringActive : analytic_deployed
+MonitoringActive --> ActiveMonitoring : monitoring_started
+
+' Alert processing
+ActiveMonitoring --> AlertGenerated : detection_triggered
+AlertGenerated --> Triaged : alert_triaged[by system]
+
+' Investigation paths
+Triaged --> InvestigationT1 : assigned_to_T1
+Triaged --> CaseClosed : false_positive[closed by T1]
+
+' T1 Investigation outcomes
+InvestigationT1 --> InvestigationProcess : investigation_started
+InvestigationProcess --> EscalatedT2 : escalate_to_T2[T1 decision]
+InvestigationProcess --> CaseClosed : resolved[T1 closes]
+
+' T2 Deep Analysis outcomes
+EscalatedT2 --> DeepAnalysis : T2_assigned
+DeepAnalysis --> EscalatedT3 : needs_enhancement[assign to T3]
+DeepAnalysis --> EscalatedProd : needs_product[assign to Production]
+DeepAnalysis --> KnowledgeArchived : analysis_complete[T2 closes]
+
+' T3 Analytics Enhancement
+EscalatedT3 --> EnhancedAnalytics : T3_working
+EnhancedAnalytics --> MonitoringActive : new_analytic_deployed
+EnhancedAnalytics --> KnowledgeArchived : enhancement_complete
+
+' Production workflow
+EscalatedProd --> ProductDev : production_assigned
+ProductDev --> ResponseCoordinated : product_developed
+ResponseCoordinated --> KnowledgeArchived : response_complete
+
+' Knowledge archival and closure
+KnowledgeArchived --> CaseClosed : artifacts_archived
+CaseClosed --> [*]
+
+' Critical event handling (parallel path)
+Triaged --> ResponseCoordinated : critical_threshold_exceeded
+ResponseCoordinated --> ProductDev : immediate_product_needed
+
+' Self-transitions for continuous processes
+MonitoringActive : entry / start_detection
+MonitoringActive : do / continuous_monitoring
+MonitoringActive : exit / log_monitoring_status
+
+AlertGenerated : entry / create_alert
+AlertGenerated : do / aggregate_similar_alerts
+AlertGenerated : exit / forward_to_dashboard
+
+DeepAnalysis : entry / access_full_datasets
+DeepAnalysis : do / develop_queries_and_notebooks
+DeepAnalysis : exit / document_findings
+
+' Guard conditions and actions
+note right of Triaged : Guard: [priority_level]\nActions: create_serviceNow_ticket
+note right of EscalatedT2 : Guard: [requires_deep_analysis]\nActions: assign_T2_analyst
+note right of EscalatedT3 : Guard: [needs_new_detection]\nActions: assign_T3_analyst
+note right of EscalatedProd : Guard: [requires_product]\nActions: assign_production_staff
+note right of ResponseCoordinated : Guard: [critical_threshold]\nActions: auto_create_ticket
+
+' Styling
+skinparam state {
+  BackgroundColor lightblue
+  BorderColor darkblue
+  FontColor black
+}
+
+skinparam state {
+  BackgroundColor<<composite>> lightgreen
+  BorderColor<<composite>> darkgreen
+}
+
+@enduml

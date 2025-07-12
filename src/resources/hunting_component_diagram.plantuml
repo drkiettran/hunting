@@ -1,0 +1,129 @@
+@startuml
+!theme plain
+title Persistent Hunt System - Simplified Component Diagram
+
+' External actors
+actor "Analysts" as Analysts
+actor "Threat Intelligence" as TI
+actor "Production Staff" as Prod
+
+' External systems
+database "Elastic/Databricks" as Analytics_Platform
+cloud "ServiceNow" as Workflow_Platform
+cloud "AWS S3" as Storage_Platform
+
+' Define key interfaces
+interface "Web UI" as UI
+interface "Analytics API" as Analytics_API
+interface "Workflow API" as Workflow_API
+interface "Storage API" as Storage_API
+
+' System boundary
+package "Persistent Hunt System" {
+  
+  ' Presentation Layer
+  component "User Interface" as Frontend {
+    portin "Dashboard"
+    portin "Investigation Console"
+    portin "Analytics Workbench"
+  }
+  
+  ' Core Services
+  component "Threat Detection Service" as Detection {
+    portout "Alert Generation"
+    portin "Analytics Management"
+    portin "Threat Intelligence"
+  }
+  
+  component "Investigation Service" as Investigation {
+    portin "Alert Processing"
+    portout "Case Management"
+    portin "Data Analysis"
+  }
+  
+  component "Intelligence Service" as Intelligence {
+    portin "Analysis Results"
+    portout "Product Generation"
+    portin "Knowledge Management"
+  }
+  
+  component "Workflow Engine" as Workflow {
+    portin "Case Coordination"
+    portout "Task Assignment"
+    portout "Notifications"
+  }
+  
+  ' Data Layer
+  component "Data Integration Hub" as DataHub {
+    portin "External Data"
+    portout "Unified Data Access"
+    portin "Artifact Storage"
+  }
+  
+  ' Internal storage
+  database "System Database" as SystemDB
+}
+
+' External connections
+Analysts --> UI
+TI --> Detection : "Threat Intelligence"
+Prod --> UI
+
+' External system connections
+Analytics_Platform <--> Analytics_API
+Workflow_Platform <--> Workflow_API
+Storage_Platform <--> Storage_API
+
+' Interface connections
+UI --> Frontend
+Analytics_API --> Detection
+Workflow_API --> Workflow
+Storage_API --> DataHub
+
+' Component interactions (key flows only)
+Frontend --> Detection : "Create Analytics"
+Frontend --> Investigation : "Investigate Alerts"
+Frontend --> Intelligence : "Develop Products"
+
+Detection --> Investigation : "Alerts"
+Investigation --> Intelligence : "Analysis"
+Investigation --> Workflow : "Cases"
+Intelligence --> Workflow : "Products"
+
+Detection --> DataHub : "Store Detections"
+Investigation --> DataHub : "Query Data"
+Intelligence --> DataHub : "Archive Knowledge"
+Workflow --> DataHub : "Track Activities"
+
+DataHub --> SystemDB : "Persist Data"
+
+' Notes for key components
+note right of Detection : • Creates detection analytics\n• Monitors for threats\n• Correlates alerts
+note right of Investigation : • Multi-tier analysis workflow\n• Evidence collection\n• Case progression
+note right of Intelligence : • Product development\n• Knowledge capture\n• Content generation
+note bottom of DataHub : • Integrates external platforms\n• Manages artifacts\n• Provides unified data access
+
+' Styling
+skinparam component {
+  BackgroundColor lightblue
+  BorderColor darkblue
+}
+skinparam interface {
+  BackgroundColor lightyellow
+  BorderColor orange
+}
+skinparam database {
+  BackgroundColor lightgreen
+  BorderColor darkgreen
+}
+skinparam cloud {
+  BackgroundColor lightgray
+  BorderColor darkgray
+}
+skinparam package {
+  BackgroundColor white
+  BorderColor black
+  FontStyle bold
+}
+
+@enduml
