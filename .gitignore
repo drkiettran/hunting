@@ -1,0 +1,44 @@
+# Eclipse-specific files
+.classpath
+.project
+.settings/
+*.launch
+*.log
+
+# Maven/Gradle build output
+target/
+build/
+bin/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+
+# IDE-specific files (if using other IDEs alongside Eclipse)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Operating System files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Log files
+logs/
+*.log
+
+# Environment-specific files (e.g., local configuration)
+application*.properties.example
+application*.yml.example
+*.env
+.env
+
+# Other temporary files
+*.tmp
+*~
+*.swp
+.#*
+hs_err_pid*
