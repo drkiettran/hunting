@@ -19,6 +19,16 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
+      username: ${ELASTICSEARCH_USERNAME:}
+      password: ${ELASTICSEARCH_PASSWORD:}
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
     
   redis:
     host: localhost
@@ -54,3 +64,4 @@ management:
 logging:
   level:
     com.persistenthunt.threatintel: DEBUG
+    org.springframework.data.elasticsearch: DEBUG

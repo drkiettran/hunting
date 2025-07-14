@@ -1,0 +1,6 @@
+package com.ops.hunting.threatintel.entity;
+
+public enum IocType {
+	IP, DOMAIN, URL, FILE_HASH, EMAIL, REGISTRY_KEY, PROCESS_NAME, SERVICE_NAME, MUTEX, CERTIFICATE_THUMBPRINT,
+	USER_AGENT, FILE_PATH, COMMAND_LINE, CVE
+}

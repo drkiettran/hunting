@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  gateway-service:
+    image: hunting/gateway-service:latest
+    ports:
+      - "8443:8443"
+      - "8444:8444"
+    environment:
+      - SSL_ENABLED=true
+      - SSL_KEYSTORE_PATH=/etc/ssl/hunting-system.p12
+      - SSL_KEYSTORE_PASSWORD=${SSL_KEYSTORE_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - ./ssl/certs:/etc/ssl:ro
+      - ./logs:/var/log/hunting-system
+    networks:
+      - hunting-network
+    depends_on:
+      - mysql
+      - redis
+      - elasticsearch
+      
+  user-management-service:
+    image: hunting/user-management-service:latest
+    ports:
+      - "8543:8443"
+    environment:
+      - SSL_ENABLED=true
+      - SSL_KEYSTORE_PATH=/etc/ssl/hunting-system.p12
+      - SSL_KEYSTORE_PASSWORD=${SSL_KEYSTORE_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - ./ssl/certs:/etc/ssl:ro
+    networks:
+      - hunting-network
+      
+  threat-intelligence-service:
+    image: hunting/threat-intelligence-service:latest
+    ports:
+      - "8643:8443"
+    environment:
+      - SSL_ENABLED=true
+      - SSL_KEYSTORE_PATH=/etc/ssl/hunting-system.p12
+      - SSL_KEYSTORE_PASSWORD=${SSL_KEYSTORE_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - ./ssl/certs:/etc/ssl:ro
+    networks:
+      - hunting-network
+      
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx-ssl.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl/certs:/etc/ssl/certs:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    networks:
+      - hunting-network
+    depends_on:
+      - gateway-service
+
+networks:
+  hunting-network:
+    driver: bridge

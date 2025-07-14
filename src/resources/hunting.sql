@@ -209,21 +209,54 @@ CREATE TABLE intelligence_products (
 );
 
 CREATE TABLE artifacts (
-    id VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(200) NOT NULL,
-    type ENUM('LOG_FILE', 'QUERY', 'NOTEBOOK', 'REPORT', 'EVIDENCE', 'SCREENSHOT') NOT NULL,
-    file_path VARCHAR(500),
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    artifact_id VARCHAR(255) NOT NULL UNIQUE,
+    artifact_type VARCHAR(50) NOT NULL,
     description TEXT,
-    created_by VARCHAR(100) NOT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    investigation_id VARCHAR(50),
-    FOREIGN KEY (investigation_id) REFERENCES investigations(id) ON DELETE CASCADE,
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_type (type),
-    INDEX idx_created_by (created_by),
-    INDEX idx_investigation_id (investigation_id),
-    INDEX idx_created_date (created_date)
+    source VARCHAR(255) NOT NULL,
+    confidence VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',
+    tlp_marking VARCHAR(10) NOT NULL DEFAULT 'AMBER',
+    timestamp DATETIME NOT NULL,
+    ingestion_time DATETIME NOT NULL,
+    expiration_time DATETIME,
+    
+    -- IOC specific fields
+    ioc_value VARCHAR(500),
+    ioc_type VARCHAR(50),
+    
+    -- Threat intelligence fields
+    threat_actor VARCHAR(255),
+    malware_family VARCHAR(255),
+    campaign VARCHAR(255),
+    
+    -- Metadata fields
+    tags JSON,
+    mitre_attack_techniques JSON,
+    metadata JSON,
+    raw_data JSON,
+    
+    -- System fields
+    hunting_system VARCHAR(100) NOT NULL DEFAULT 'persistent-hunting-v1',
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    
+    -- Indexes for performance
+    INDEX idx_artifact_id (artifact_id),
+    INDEX idx_artifact_type (artifact_type),
+    INDEX idx_source (source),
+    INDEX idx_ioc_value (ioc_value),
+    INDEX idx_ioc_type (ioc_type),
+    INDEX idx_threat_actor (threat_actor),
+    INDEX idx_malware_family (malware_family),
+    INDEX idx_campaign (campaign),
+    INDEX idx_timestamp (timestamp),
+    INDEX idx_active (active),
+    INDEX idx_created_at (created_at)
 );
+
 
 CREATE TABLE notes (
     id VARCHAR(50) PRIMARY KEY,
@@ -374,3 +407,50 @@ LEFT JOIN investigations i ON u.username = i.assigned_analyst
 LEFT JOIN tickets t ON u.username = t.assigned_to
 WHERE u.role = 'ANALYST' AND u.is_active = TRUE
 GROUP BY u.id, u.username, u.tier;
+
+
+-- Add some initial data for testing
+INSERT INTO artifacts (
+    artifact_id, artifact_type, description, source, confidence, tlp_marking,
+    timestamp, ingestion_time, ioc_value, ioc_type, threat_actor,
+    created_at, updated_at
+) VALUES 
+(
+    'ART-SAMPLE01', 'IOC', 'Sample malicious IP address', 'threat-intel-feed',
+    'HIGH', 'AMBER', NOW(), NOW(), '192.168.1.100', 'IP', 'APT29',
+    NOW(), NOW()
+),
+(
+    'ART-SAMPLE02', 'INTELLIGENCE', 'Suspected C2 domain', 'internal-analysis',
+    'MEDIUM', 'GREEN', NOW(), NOW(), 'malicious.example.com', 'DOMAIN', 'APT28',
+    NOW(), NOW()
+);
+
+-- ===================================
+-- Example Usage and Test Queries
+-- ===================================
+
+-- Query active artifacts by type
+SELECT * FROM artifacts 
+WHERE artifact_type = 'IOC' AND active = TRUE;
+
+-- Find artifacts by threat actor
+SELECT * FROM artifacts 
+WHERE threat_actor = 'APT29' AND active = TRUE;
+
+-- Get recent artifacts (last 24 hours)
+SELECT * FROM artifacts 
+WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+ORDER BY timestamp DESC;
+
+-- Count artifacts by type
+SELECT artifact_type, COUNT(*) as count 
+FROM artifacts 
+WHERE active = TRUE 
+GROUP BY artifact_type;
+
+-- Find expired artifacts
+SELECT * FROM artifacts 
+WHERE expiration_time IS NOT NULL 
+AND expiration_time < NOW() 
+AND active = TRUE;

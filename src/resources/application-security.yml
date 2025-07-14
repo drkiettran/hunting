@@ -1,0 +1,98 @@
+security:
+  jwt:
+    # CRITICAL: Use a strong, randomly generated secret in production
+    # Generate with: openssl rand -base64 64
+    secret: ${JWT_SECRET:your-very-long-and-secure-jwt-secret-that-is-at-least-256-bits-long-for-production-use}
+    expiration: ${JWT_EXPIRATION:3600}  # 1 hour in seconds
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400}  # 24 hours in seconds
+    
+  cors:
+    allowed-origins:
+      - ${FRONTEND_URL:https://hunting.yourdomain.com}
+      - ${DEV_FRONTEND_URL:https://localhost:3000}
+    max-age: 3600
+    
+  rate-limit:
+    login:
+      capacity: 5
+      duration: 900  # 15 minutes in seconds
+    api:
+      capacity: 100
+      duration: 60   # 1 minute in seconds
+      
+  password:
+    min-length: 12
+    max-length: 128
+    require-uppercase: true
+    require-lowercase: true
+    require-digit: true
+    require-special: true
+    
+  session:
+    timeout: 1800  # 30 minutes in seconds
+    
+# SSL/TLS Configuration
+server:
+  port: ${SERVER_PORT:8443}
+  ssl:
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEYSTORE_PATH:classpath:keystore/hunting-system.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:changeme}
+    key-store-type: PKCS12
+    key-alias: ${SSL_KEY_ALIAS:hunting-system}
+    
+    # TLS Protocol Configuration
+    protocol: TLS
+    enabled-protocols: TLSv1.3,TLSv1.2
+    ciphers:
+      - TLS_AES_256_GCM_SHA384
+      - TLS_CHACHA20_POLY1305_SHA256
+      - TLS_AES_128_GCM_SHA256
+      - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+      - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+      - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+      
+    # Client certificate authentication (optional)
+    client-auth: ${SSL_CLIENT_AUTH:want}
+    trust-store: ${SSL_TRUSTSTORE_PATH:classpath:keystore/truststore.p12}
+    trust-store-password: ${SSL_TRUSTSTORE_PASSWORD:changeme}
+    trust-store-type: PKCS12
+
+# Management endpoint security
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+      show-details: when-authorized
+      roles: ADMIN
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+  server:
+    port: ${MANAGEMENT_PORT:8444}
+    ssl:
+      enabled: ${SSL_ENABLED:true}
+      key-store: ${SSL_KEYSTORE_PATH:classpath:keystore/hunting-system.p12}
+      key-store-password: ${SSL_KEYSTORE_PASSWORD:changeme}
+
+# Logging configuration
+logging:
+  level:
+    com.hunting: INFO
+    org.springframework.security: INFO
+    org.springframework.web.cors: DEBUG
+    root: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE:logs/hunting-security.log}
+    max-size: 10MB
+    max-history: 30

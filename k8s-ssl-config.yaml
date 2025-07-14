@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hunting-ssl-secret
+  namespace: persistent-hunt
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t... # Base64 encoded certificate
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t... # Base64 encoded private key
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hunting-keystore-secret
+  namespace: persistent-hunt
+type: Opaque
+data:
+  hunting-system.p12: MIIKvAIBAzCCCn... # Base64 encoded PKCS12 keystore
+  truststore.p12: MIIKvAIBAzCCCn...     # Base64 encoded truststore
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hunting-jwt-secret
+  namespace: persistent-hunt
+type: Opaque
+data:
+  jwt-secret: eW91ci12ZXJ5LWxvbmctYW5kLXNlY3VyZS1qd3Qtc2VjcmV0... # Base64 encoded JWT secret
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: persistent-hunt
+spec:
+  template:
+    spec:
+      containers:
+      - name: gateway-service
+        image: hunting/gateway-service:latest
+        ports:
+        - containerPort: 8443
+          name: https
+        - containerPort: 8444
+          name: management
+        env:
+        - name: SSL_ENABLED
+          value: "true"
+        - name: SSL_KEYSTORE_PATH
+          value: "/etc/ssl/hunting-system.p12"
+        - name: SSL_KEYSTORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hunting-keystore-secret
+              key: keystore-password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: hunting-jwt-secret
+              key: jwt-secret
+        volumeMounts:
+        - name: ssl-certs
+          mountPath: /etc/ssl
+          readOnly: true
+        - name: logs
+          mountPath: /var/log/hunting-system
+      volumes:
+      - name: ssl-certs
+        secret:
+          secretName: hunting-keystore-secret
+      - name: logs
+        persistentVolumeClaim:
+          claimName: hunting-logs-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  namespace: persistent-hunt
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 443
+    targetPort: 8443
+    name: https
+  - port: 8444
+    targetPort: 8444
+    name: management
+  selector:
+    app: gateway-service
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hunting-ingress
+  namespace: persistent-hunt
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-protocols: "TLSv1.2 TLSv1.3"
+    nginx.ingress.kubernetes.io/ssl-ciphers: "ECDHE-RSA-AES256-GCM-SHA384,ECDHE-RSA-CHACHA20-POLY1305"
+spec:
+  tls:
+  - hosts:
+    - hunting.yourdomain.com
+    secretName: hunting-ssl-secret
+  rules:
+  - host: hunting.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gateway-service
+            port:
+              number: 443
