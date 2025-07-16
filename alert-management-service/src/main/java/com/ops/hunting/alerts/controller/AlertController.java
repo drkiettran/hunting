@@ -1,21 +1,20 @@
 package com.ops.hunting.alerts.controller;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -24,283 +23,146 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ops.hunting.alerts.dto.AlertCreateDto;
-import com.ops.hunting.alerts.dto.AlertUpdateDto;
+import com.ops.hunting.alerts.dto.AlertDTO;
+import com.ops.hunting.alerts.dto.AlertSummaryDTO;
+import com.ops.hunting.alerts.enums.AlertSeverity;
+import com.ops.hunting.alerts.enums.AlertStatus;
 import com.ops.hunting.alerts.service.AlertService;
-import com.ops.hunting.common.dto.AlertDto;
-import com.ops.hunting.common.enums.AlertStatus;
-import com.ops.hunting.common.enums.SeverityLevel;
-import com.ops.hunting.common.util.ResponseWrapper;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/alerts")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
+@Slf4j
+@Tag(name = "Alert Management", description = "API for managing security alerts")
 public class AlertController {
 
 	private final AlertService alertService;
 
-	@Autowired
-	public AlertController(AlertService alertService) {
-		this.alertService = alertService;
-	}
-
 	@PostMapping
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<AlertDto>> createAlert(@Valid @RequestBody AlertCreateDto createDto) {
-		try {
-			AlertDto created = alertService.createAlert(createDto);
-			return ResponseEntity.ok(ResponseWrapper.success("Alert created successfully", created));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body(ResponseWrapper.error("Failed to create alert: " + e.getMessage()));
-		}
+	@Operation(summary = "Create a new alert")
+	@PreAuthorize("hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<AlertDTO> createAlert(@Valid @RequestBody AlertDTO alertDTO) {
+		log.info("Creating new alert: {}", alertDTO.getTitle());
+		AlertDTO createdAlert = alertService.createAlert(alertDTO);
+		return ResponseEntity.status(HttpStatus.CREATED).body(createdAlert);
 	}
 
 	@GetMapping("/{id}")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<AlertDto>> getAlertById(@PathVariable String id) {
-		try {
-			AlertDto dto = alertService.getAlertById(id).orElseThrow(() -> new RuntimeException("Alert not found"));
-			return ResponseEntity.ok(ResponseWrapper.success(dto));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body(ResponseWrapper.error("Failed to get alert: " + e.getMessage()));
-		}
+	@Operation(summary = "Get alert by ID")
+	@PreAuthorize("hasRole('VIEWER') or hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<AlertDTO> getAlertById(@PathVariable UUID id) {
+		log.debug("Fetching alert with ID: {}", id);
+		AlertDTO alert = alertService.getAlertById(id);
+		return ResponseEntity.ok(alert);
 	}
 
 	@GetMapping
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<Page<AlertDto>>> getAllAlerts(@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "20") int size, @RequestParam(defaultValue = "timestamp") String sortBy,
-			@RequestParam(defaultValue = "desc") String sortDirection, @RequestParam(required = false) String search,
-			@RequestParam(defaultValue = "false") boolean activeOnly) {
+	@Operation(summary = "Get all alerts with pagination")
+	@PreAuthorize("hasRole('VIEWER') or hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<Page<AlertDTO>> getAllAlerts(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "createdAt") String sortBy,
+			@RequestParam(defaultValue = "desc") String sortDir) {
 
-		try {
-			Sort sort = sortDirection.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending()
-					: Sort.by(sortBy).ascending();
-			Pageable pageable = PageRequest.of(page, size, sort);
+		Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
-			Page<AlertDto> result;
-			if (search != null && !search.trim().isEmpty()) {
-				result = alertService.searchAlerts(search, pageable);
-			} else if (activeOnly) {
-				result = alertService.getActiveAlerts(pageable);
-			} else {
-				result = alertService.getAllAlerts(pageable);
-			}
-
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body(ResponseWrapper.error("Failed to get alerts: " + e.getMessage()));
-		}
-	}
-
-	@GetMapping("/by-status/{status}")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<Page<AlertDto>>> getAlertsByStatus(@PathVariable AlertStatus status,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-		try {
-			Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
-			Page<AlertDto> result = alertService.getAlertsByStatus(status, pageable);
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to get alerts by status: " + e.getMessage()));
-		}
-	}
-
-	@GetMapping("/by-severity/{severity}")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<Page<AlertDto>>> getAlertsBySeverity(@PathVariable SeverityLevel severity,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-		try {
-			Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
-			Page<AlertDto> result = alertService.getAlertsBySeverity(severity, pageable);
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to get alerts by severity: " + e.getMessage()));
-		}
-	}
-
-	@GetMapping("/assigned-to-me")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<Page<AlertDto>>> getMyAssignedAlerts(Principal principal,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-		try {
-			Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
-			Page<AlertDto> result = alertService.getAlertsByAssignedTo(principal.getName(), pageable);
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to get assigned alerts: " + e.getMessage()));
-		}
-	}
-
-	@GetMapping("/by-date-range")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<List<AlertDto>>> getAlertsByDateRange(
-			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-		try {
-			List<AlertDto> result = alertService.getAlertsByDateRange(startDate, endDate);
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to get alerts by date range: " + e.getMessage()));
-		}
-	}
-
-	@GetMapping("/high-priority")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<List<AlertDto>>> getHighPriorityAlerts() {
-		try {
-			List<AlertDto> result = alertService.getHighPriorityAlerts();
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to get high priority alerts: " + e.getMessage()));
-		}
+		Pageable pageable = PageRequest.of(page, size, sort);
+		Page<AlertDTO> alerts = alertService.getAllAlerts(pageable);
+		return ResponseEntity.ok(alerts);
 	}
 
 	@PutMapping("/{id}")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<AlertDto>> updateAlert(@PathVariable String id,
-			@Valid @RequestBody AlertUpdateDto updateDto) {
-		try {
-			AlertDto updated = alertService.updateAlert(id, updateDto);
-			return ResponseEntity.ok(ResponseWrapper.success("Alert updated successfully", updated));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body(ResponseWrapper.error("Failed to update alert: " + e.getMessage()));
-		}
+	@Operation(summary = "Update alert")
+	@PreAuthorize("hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<AlertDTO> updateAlert(@PathVariable UUID id, @Valid @RequestBody AlertDTO alertDTO) {
+		log.info("Updating alert with ID: {}", id);
+		AlertDTO updatedAlert = alertService.updateAlert(id, alertDTO);
+		return ResponseEntity.ok(updatedAlert);
 	}
 
-	@PostMapping("/{id}/assign")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<AlertDto>> assignAlert(@PathVariable String id,
-			@RequestBody Map<String, String> request) {
-		try {
-			String analystId = request.get("analystId");
-			if (analystId == null || analystId.trim().isEmpty()) {
-				throw new RuntimeException("Analyst ID is required");
-			}
-			AlertDto assigned = alertService.assignAlert(id, analystId);
-			return ResponseEntity.ok(ResponseWrapper.success("Alert assigned successfully", assigned));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body(ResponseWrapper.error("Failed to assign alert: " + e.getMessage()));
-		}
+	@PatchMapping("/{id}/status")
+	@Operation(summary = "Update alert status")
+	@PreAuthorize("hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<AlertDTO> updateAlertStatus(@PathVariable UUID id, @RequestParam AlertStatus status,
+			@RequestParam(required = false) String assignedTo) {
+
+		log.info("Updating alert status for ID: {} to {}", id, status);
+		AlertDTO updatedAlert = alertService.updateAlertStatus(id, status, assignedTo);
+		return ResponseEntity.ok(updatedAlert);
 	}
 
-	@PostMapping("/{id}/assign-to-me")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<AlertDto>> assignAlertToMe(@PathVariable String id, Principal principal) {
-		try {
-			AlertDto assigned = alertService.assignAlert(id, principal.getName());
-			return ResponseEntity.ok(ResponseWrapper.success("Alert assigned to you successfully", assigned));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body(ResponseWrapper.error("Failed to assign alert: " + e.getMessage()));
-		}
-	}
-
-	@PostMapping("/{id}/in-progress")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<AlertDto>> markInProgress(@PathVariable String id) {
-		try {
-			AlertDto updated = alertService.markInProgress(id);
-			return ResponseEntity.ok(ResponseWrapper.success("Alert marked as in progress", updated));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to mark alert as in progress: " + e.getMessage()));
-		}
-	}
-
-	@PostMapping("/{id}/resolve")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<AlertDto>> resolveAlert(@PathVariable String id,
-			@RequestBody Map<String, String> request) {
-		try {
-			String notes = request.get("resolutionNotes");
-			AlertDto resolved = alertService.resolveAlert(id, notes);
-			return ResponseEntity.ok(ResponseWrapper.success("Alert resolved successfully", resolved));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to resolve alert: " + e.getMessage()));
-		}
-	}
-
-	@PostMapping("/{id}/false-positive")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<AlertDto>> markAsFalsePositive(@PathVariable String id,
-			@RequestBody Map<String, String> request) {
-		try {
-			String notes = request.get("notes");
-			AlertDto updated = alertService.markAsFalsePositive(id, notes);
-			return ResponseEntity.ok(ResponseWrapper.success("Alert marked as false positive", updated));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to mark alert as false positive: " + e.getMessage()));
-		}
-	}
-
-	@GetMapping("/statistics/status")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<Map<String, Long>>> getStatusStatistics() {
-		try {
-			List<Object[]> stats = alertService.getAlertStatusStatistics();
-			Map<String, Long> result = stats.stream()
-					.collect(Collectors.toMap(arr -> ((AlertStatus) arr[0]).name(), arr -> (Long) arr[1]));
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to get status statistics: " + e.getMessage()));
-		}
-	}
-
-	@GetMapping("/statistics/severity")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<Map<String, Long>>> getSeverityStatistics() {
-		try {
-			List<Object[]> stats = alertService.getAlertSeverityStatistics();
-			Map<String, Long> result = stats.stream()
-					.collect(Collectors.toMap(arr -> ((SeverityLevel) arr[0]).name(), arr -> (Long) arr[1]));
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to get severity statistics: " + e.getMessage()));
-		}
-	}
-
-	@GetMapping("/statistics/daily")
-	@PreAuthorize("hasAnyRole('ANALYST', 'PRODUCTION_STAFF', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<List<Map<String, Object>>>> getDailyStatistics(
-			@RequestParam(defaultValue = "30") int days) {
-		try {
-			List<Object[]> stats = alertService.getDailyAlertStatistics(days);
-			List<Map<String, Object>> result = stats.stream()
-					.map(arr -> Map.of("date", arr[0].toString(), "count", arr[1])).collect(Collectors.toList());
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to get daily statistics: " + e.getMessage()));
-		}
-	}
-
-	@GetMapping("/statistics/workload")
+	@DeleteMapping("/{id}")
+	@Operation(summary = "Delete alert")
 	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<ResponseWrapper<Map<String, Long>>> getWorkloadStatistics() {
-		try {
-			List<Object[]> stats = alertService.getAnalystWorkloadStatistics();
-			Map<String, Long> result = stats.stream()
-					.collect(Collectors.toMap(arr -> (String) arr[0], arr -> (Long) arr[1]));
-			return ResponseEntity.ok(ResponseWrapper.success(result));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(ResponseWrapper.error("Failed to get workload statistics: " + e.getMessage()));
-		}
+	public ResponseEntity<Void> deleteAlert(@PathVariable UUID id) {
+		log.info("Deleting alert with ID: {}", id);
+		alertService.deleteAlert(id);
+		return ResponseEntity.noContent().build();
 	}
 
-	@GetMapping("/health")
-	public ResponseEntity<ResponseWrapper<String>> health() {
-		return ResponseEntity.ok(ResponseWrapper.success("Alert Management Service is healthy"));
+	@GetMapping("/search")
+	@Operation(summary = "Search alerts with filters")
+	@PreAuthorize("hasRole('VIEWER') or hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<Page<AlertDTO>> searchAlerts(@RequestParam(required = false) AlertSeverity severity,
+			@RequestParam(required = false) AlertStatus status,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+
+		Pageable pageable = PageRequest.of(page, size);
+		Page<AlertDTO> alerts = alertService.searchAlerts(severity, status, from, to, pageable);
+		return ResponseEntity.ok(alerts);
+	}
+
+	@GetMapping("/summary")
+	@Operation(summary = "Get alert summary statistics")
+	@PreAuthorize("hasRole('VIEWER') or hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<AlertSummaryDTO> getAlertSummary() {
+		log.debug("Generating alert summary");
+		AlertSummaryDTO summary = alertService.getAlertSummary();
+		return ResponseEntity.ok(summary);
+	}
+
+	@GetMapping("/assigned/{assignee}")
+	@Operation(summary = "Get alerts assigned to a specific user")
+	@PreAuthorize("hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<List<AlertDTO>> getAlertsByAssignee(@PathVariable String assignee) {
+		log.debug("Fetching alerts for assignee: {}", assignee);
+		List<AlertDTO> alerts = alertService.getAlertsByAssignee(assignee);
+		return ResponseEntity.ok(alerts);
+	}
+
+	@GetMapping("/stale")
+	@Operation(summary = "Get stale alerts")
+	@PreAuthorize("hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<List<AlertDTO>> getStaleAlerts(@RequestParam(defaultValue = "24") int hoursThreshold) {
+		log.debug("Fetching stale alerts older than {} hours", hoursThreshold);
+		List<AlertDTO> staleAlerts = alertService.getStaleAlerts(hoursThreshold);
+		return ResponseEntity.ok(staleAlerts);
+	}
+
+	@PatchMapping("/bulk-status")
+	@Operation(summary = "Bulk update alert status")
+	@PreAuthorize("hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<Void> bulkUpdateStatus(@RequestParam List<UUID> alertIds, @RequestParam AlertStatus status,
+			@RequestParam String updatedBy) {
+
+		log.info("Bulk updating {} alerts to status: {}", alertIds.size(), status);
+		alertService.bulkUpdateStatus(alertIds, status, updatedBy);
+		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping("/source-systems")
+	@Operation(summary = "Get distinct source systems")
+	@PreAuthorize("hasRole('VIEWER') or hasRole('ANALYST') or hasRole('ADMIN')")
+	public ResponseEntity<List<String>> getSourceSystems() {
+		log.debug("Fetching distinct source systems");
+		List<String> sourceSystems = alertService.getSourceSystems();
+		return ResponseEntity.ok(sourceSystems);
 	}
 }

@@ -1,200 +1,116 @@
 package com.ops.hunting.alerts.entity;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
-import com.ops.hunting.common.entity.BaseEntity;
-import com.ops.hunting.common.enums.AlertStatus;
-import com.ops.hunting.common.enums.SeverityLevel;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.CascadeType;
+import com.ops.hunting.alerts.enums.AlertSeverity;
+import com.ops.hunting.alerts.enums.AlertStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.Version;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "alerts")
-public class Alert extends BaseEntity {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Alert {
 
-	@NotNull
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
+
 	@Column(nullable = false)
-	private LocalDateTime timestamp;
+	private String title;
+
+	@Column(length = 1000)
+	private String description;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private SeverityLevel severity;
+	private AlertSeverity severity;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private AlertStatus status;
 
-	@NotBlank
-	@Column(columnDefinition = "TEXT", nullable = false)
-	private String description;
+	@Column(name = "source_system")
+	private String sourceSystem;
 
-	@Column(name = "raw_data", columnDefinition = "TEXT")
-	private String rawData;
+	@Column(name = "source_ip")
+	private String sourceIp;
+
+	@Column(name = "destination_ip")
+	private String destinationIp;
+
+	@Column(name = "source_port")
+	private Integer sourcePort;
+
+	@Column(name = "destination_port")
+	private Integer destinationPort;
+
+	@Column(name = "protocol")
+	private String protocol;
+
+	@Column(name = "rule_id")
+	private String ruleId;
+
+	@Column(name = "rule_name")
+	private String ruleName;
 
 	@Column(name = "assigned_to")
 	private String assignedTo;
 
-	@Column(name = "false_positive")
-	private Boolean falsePositive = false;
+	@Column(name = "closed_by")
+	private String closedBy;
 
-	@Column(name = "analytic_id")
-	private String analyticId;
+	@Column(name = "closed_at")
+	private LocalDateTime closedAt;
 
-	@Column(name = "resolved_date")
-	private LocalDateTime resolvedDate;
-
-	@Column(name = "resolution_notes", columnDefinition = "TEXT")
+	@Column(name = "resolution_notes", length = 2000)
 	private String resolutionNotes;
 
-	@OneToMany(mappedBy = "alert", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<AlertIndicator> indicators = new ArrayList<>();
+	@Column(name = "tags")
+	private String tags;
 
-	// Constructors
-	public Alert() {
-	}
+	@Column(name = "threat_category")
+	private String threatCategory;
 
-	public Alert(LocalDateTime timestamp, SeverityLevel severity, String description) {
-		this.timestamp = timestamp;
-		this.severity = severity;
-		this.description = description;
-		this.status = AlertStatus.NEW;
-		this.falsePositive = false;
-	}
+	@Column(name = "confidence_score")
+	private Double confidenceScore;
 
-	// Business methods
-	public boolean isHighPriority() {
-		return severity == SeverityLevel.HIGH || severity == SeverityLevel.CRITICAL;
-	}
+	@CreationTimestamp
+	@Column(name = "created_at", nullable = false, updatable = false)
+	private LocalDateTime createdAt;
 
-	public boolean isAssigned() {
-		return assignedTo != null && !assignedTo.trim().isEmpty();
-	}
+	@UpdateTimestamp
+	@Column(name = "updated_at")
+	private LocalDateTime updatedAt;
 
-	public boolean isResolved() {
-		return status == AlertStatus.RESOLVED || status == AlertStatus.FALSE_POSITIVE;
-	}
+	@Column(name = "raw_data", length = 5000)
+	private String rawData;
 
-	public void assignTo(String analyst) {
-		this.assignedTo = analyst;
-		if (this.status == AlertStatus.NEW) {
-			this.status = AlertStatus.ASSIGNED;
-		}
-	}
+	@Column(name = "hash")
+	private String hash;
 
-	public void markAsInProgress() {
-		this.status = AlertStatus.IN_PROGRESS;
-	}
+	@Column(name = "investigation_id")
+	private UUID investigationId;
 
-	public void resolve(String notes) {
-		this.status = AlertStatus.RESOLVED;
-		this.resolvedDate = LocalDateTime.now();
-		this.resolutionNotes = notes;
-	}
-
-	public void markAsFalsePositive(String notes) {
-		this.status = AlertStatus.FALSE_POSITIVE;
-		this.falsePositive = true;
-		this.resolvedDate = LocalDateTime.now();
-		this.resolutionNotes = notes;
-	}
-
-	// Getters and setters
-	public LocalDateTime getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(LocalDateTime timestamp) {
-		this.timestamp = timestamp;
-	}
-
-	public SeverityLevel getSeverity() {
-		return severity;
-	}
-
-	public void setSeverity(SeverityLevel severity) {
-		this.severity = severity;
-	}
-
-	public AlertStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(AlertStatus status) {
-		this.status = status;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public String getRawData() {
-		return rawData;
-	}
-
-	public void setRawData(String rawData) {
-		this.rawData = rawData;
-	}
-
-	public String getAssignedTo() {
-		return assignedTo;
-	}
-
-	public void setAssignedTo(String assignedTo) {
-		this.assignedTo = assignedTo;
-	}
-
-	public Boolean getFalsePositive() {
-		return falsePositive;
-	}
-
-	public void setFalsePositive(Boolean falsePositive) {
-		this.falsePositive = falsePositive;
-	}
-
-	public String getAnalyticId() {
-		return analyticId;
-	}
-
-	public void setAnalyticId(String analyticId) {
-		this.analyticId = analyticId;
-	}
-
-	public LocalDateTime getResolvedDate() {
-		return resolvedDate;
-	}
-
-	public void setResolvedDate(LocalDateTime resolvedDate) {
-		this.resolvedDate = resolvedDate;
-	}
-
-	public String getResolutionNotes() {
-		return resolutionNotes;
-	}
-
-	public void setResolutionNotes(String resolutionNotes) {
-		this.resolutionNotes = resolutionNotes;
-	}
-
-	public List<AlertIndicator> getIndicators() {
-		return indicators;
-	}
-
-	public void setIndicators(List<AlertIndicator> indicators) {
-		this.indicators = indicators;
-	}
+	@Version
+	private Long version;
 }

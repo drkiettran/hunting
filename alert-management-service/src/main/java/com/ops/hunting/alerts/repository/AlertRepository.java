@@ -2,6 +2,7 @@ package com.ops.hunting.alerts.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,55 +12,43 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ops.hunting.alerts.entity.Alert;
-import com.ops.hunting.common.enums.AlertStatus;
-import com.ops.hunting.common.enums.SeverityLevel;
+import com.ops.hunting.alerts.enums.AlertSeverity;
+import com.ops.hunting.alerts.enums.AlertStatus;
 
 @Repository
-public interface AlertRepository extends JpaRepository<Alert, String> {
+public interface AlertRepository extends JpaRepository<Alert, UUID> {
 
 	List<Alert> findByStatus(AlertStatus status);
 
-	List<Alert> findBySeverity(SeverityLevel severity);
+	List<Alert> findBySeverity(AlertSeverity severity);
+
+	List<Alert> findByStatusAndSeverity(AlertStatus status, AlertSeverity severity);
+
+	List<Alert> findBySourceSystem(String sourceSystem);
 
 	List<Alert> findByAssignedTo(String assignedTo);
 
-	Page<Alert> findByStatus(AlertStatus status, Pageable pageable);
+	List<Alert> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
-	Page<Alert> findBySeverity(SeverityLevel severity, Pageable pageable);
+	Page<Alert> findBySeverityAndStatusAndCreatedAtBetween(AlertSeverity severity, AlertStatus status,
+			LocalDateTime start, LocalDateTime end, Pageable pageable);
 
-	Page<Alert> findByAssignedTo(String assignedTo, Pageable pageable);
+	long countByStatus(AlertStatus status);
 
-	@Query("SELECT a FROM Alert a WHERE a.timestamp >= :startDate AND a.timestamp <= :endDate")
-	List<Alert> findByTimestampBetween(@Param("startDate") LocalDateTime startDate,
-			@Param("endDate") LocalDateTime endDate);
+	long countBySeverity(AlertSeverity severity);
 
-	@Query("SELECT a FROM Alert a WHERE a.severity IN :severities AND a.status IN :statuses")
-	List<Alert> findBySeverityInAndStatusIn(@Param("severities") List<SeverityLevel> severities,
-			@Param("statuses") List<AlertStatus> statuses);
+	long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
-	@Query("SELECT a FROM Alert a WHERE a.falsePositive = false AND a.status != 'FALSE_POSITIVE'")
-	Page<Alert> findActiveAlerts(Pageable pageable);
-
-	@Query("SELECT a FROM Alert a WHERE " + "LOWER(a.description) LIKE LOWER(CONCAT('%', :search, '%')) OR "
-			+ "LOWER(a.rawData) LIKE LOWER(CONCAT('%', :search, '%'))")
-	Page<Alert> searchAlerts(@Param("search") String search, Pageable pageable);
-
-	@Query("SELECT COUNT(a) FROM Alert a WHERE a.status = :status")
-	long countByStatus(@Param("status") AlertStatus status);
-
-	@Query("SELECT COUNT(a) FROM Alert a WHERE a.severity = :severity AND a.timestamp >= :since")
-	long countBySeverityAndTimestampAfter(@Param("severity") SeverityLevel severity,
+	@Query("SELECT a FROM Alert a WHERE a.severity = :severity AND a.createdAt >= :since")
+	List<Alert> findHighSeverityAlertsSince(@Param("severity") AlertSeverity severity,
 			@Param("since") LocalDateTime since);
 
-	@Query("SELECT a.status, COUNT(a) FROM Alert a GROUP BY a.status")
-	List<Object[]> countByStatus();
+	@Query("SELECT a FROM Alert a WHERE a.status = 'OPEN' AND a.createdAt < :threshold")
+	List<Alert> findStaleOpenAlerts(@Param("threshold") LocalDateTime threshold);
 
-	@Query("SELECT a.severity, COUNT(a) FROM Alert a GROUP BY a.severity")
-	List<Object[]> countBySeverity();
+	@Query("SELECT DISTINCT a.sourceSystem FROM Alert a")
+	List<String> findDistinctSourceSystems();
 
-	@Query("SELECT DATE(a.timestamp), COUNT(a) FROM Alert a WHERE a.timestamp >= :since GROUP BY DATE(a.timestamp)")
-	List<Object[]> countDailyAlerts(@Param("since") LocalDateTime since);
-
-	@Query("SELECT a.assignedTo, COUNT(a) FROM Alert a WHERE a.assignedTo IS NOT NULL GROUP BY a.assignedTo")
-	List<Object[]> countByAssignedAnalyst();
+	@Query("SELECT AVG(EXTRACT(EPOCH FROM (a.closedAt - a.createdAt))) FROM Alert a WHERE a.status = 'CLOSED' AND a.closedAt IS NOT NULL")
+	Double calculateAverageResolutionTimeInSeconds();
 }
