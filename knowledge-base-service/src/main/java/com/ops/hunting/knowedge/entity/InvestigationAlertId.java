@@ -2,6 +2,7 @@ package com.ops.hunting.knowedge.entity;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -10,17 +11,17 @@ import jakarta.persistence.Embeddable;
 public class InvestigationAlertId implements Serializable {
 
 	@Column(name = "investigation_id")
-	private String investigationId;
+	private UUID investigationId;
 
 	@Column(name = "alert_id")
-	private String alertId;
+	private UUID alertId;
 
 	// Constructors
 	public InvestigationAlertId() {
 	}
 
-	public InvestigationAlertId(String investigationId, String alertId) {
-		this.investigationId = investigationId;
+	public InvestigationAlertId(UUID uuid, UUID alertId) {
+		this.investigationId = uuid;
 		this.alertId = alertId;
 	}
 
@@ -41,19 +42,19 @@ public class InvestigationAlertId implements Serializable {
 	}
 
 	// Getters and setters
-	public String getInvestigationId() {
+	public UUID getInvestigationId() {
 		return investigationId;
 	}
 
-	public void setInvestigationId(String investigationId) {
+	public void setInvestigationId(UUID investigationId) {
 		this.investigationId = investigationId;
 	}
 
-	public String getAlertId() {
+	public UUID getAlertId() {
 		return alertId;
 	}
 
-	public void setAlertId(String alertId) {
+	public void setAlertId(UUID alertId) {
 		this.alertId = alertId;
 	}
 }

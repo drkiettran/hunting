@@ -2,6 +2,7 @@ package com.ops.hunting.knowledge.dto;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 import com.ops.hunting.common.enums.ArtifactType;
 
@@ -10,7 +11,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class ArtifactDto {
 
-	private String id;
+	private UUID id;
 
 	@NotBlank(message = "Name is required")
 	private String name;
@@ -43,12 +44,12 @@ public class ArtifactDto {
 	}
 
 	// Getters and setters
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setId(UUID uuid) {
+		this.id = uuid;
 	}
 
 	public String getName() {

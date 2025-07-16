@@ -2,6 +2,7 @@ package com.ops.hunting.analytics.service.platform;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -39,10 +40,10 @@ public class DatabricksPlatformService implements PlatformService {
 	}
 
 	@Override
-	public void deployAnalytic(String analyticId, String query) {
+	public void deployAnalytic(UUID analyticId, String query) {
 		try {
 			// In a real implementation, this would create a scheduled job in Databricks
-			deployedAnalytics.put(analyticId, query);
+			deployedAnalytics.put(analyticId.toString(), query);
 
 			// Validate the SQL query
 			validateSqlQuery(query);
@@ -54,7 +55,7 @@ public class DatabricksPlatformService implements PlatformService {
 	}
 
 	@Override
-	public void undeployAnalytic(String analyticId) {
+	public void undeployAnalytic(UUID analyticId) {
 		try {
 			deployedAnalytics.remove(analyticId);
 			System.out.println("Undeployed analytic " + analyticId + " from Databricks");

@@ -276,15 +276,9 @@ public class AlertService {
 	private AlertDto convertToDto(Alert alert) {
 		AlertDto dto = new AlertDto();
 		dto.setId(alert.getId());
-		dto.setTimestamp(alert.getTimestamp());
-		dto.setSeverity(alert.getSeverity());
-		dto.setStatus(alert.getStatus());
 		dto.setDescription(alert.getDescription());
 		dto.setRawData(alert.getRawData());
-		dto.setAssignedTo(alert.getAssignedTo());
 		dto.setFalsePositive(alert.getFalsePositive());
-		dto.setAnalyticId(alert.getAnalyticId());
-		dto.setCreatedDate(alert.getCreatedDate());
 		return dto;
 	}
 

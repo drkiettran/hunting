@@ -1,6 +1,7 @@
 package com.ops.hunting.knowedge.entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
@@ -25,7 +26,7 @@ public class InvestigationAlert {
 	private Investigation investigation;
 
 	@Column(name = "alert_id")
-	private String alertId;
+	private UUID alertId;
 
 	@Column(name = "analysis_notes", columnDefinition = "TEXT")
 	private String analysisNotes;
@@ -42,7 +43,7 @@ public class InvestigationAlert {
 	public InvestigationAlert() {
 	}
 
-	public InvestigationAlert(Investigation investigation, String alertId, String analysisNotes) {
+	public InvestigationAlert(Investigation investigation, UUID alertId, String analysisNotes) {
 		this.id = new InvestigationAlertId(investigation.getId(), alertId);
 		this.investigation = investigation;
 		this.alertId = alertId;
@@ -66,11 +67,11 @@ public class InvestigationAlert {
 		this.investigation = investigation;
 	}
 
-	public String getAlertId() {
+	public UUID getAlertId() {
 		return alertId;
 	}
 
-	public void setAlertId(String alertId) {
+	public void setAlertId(UUID alertId) {
 		this.alertId = alertId;
 	}
 

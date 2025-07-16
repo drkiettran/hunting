@@ -1,3 +1,4 @@
+
 package com.ops.hunting.knowedge.entity;
 
 import java.time.LocalDateTime;
@@ -57,7 +58,7 @@ public class Investigation extends BaseEntity {
 	private List<InvestigationAlert> investigationAlerts = new ArrayList<>();
 
 	@PrePersist
-	protected void onCreate() {
+	public void onCreate() {
 		super.onCreate();
 		if (startDate == null) {
 			startDate = LocalDateTime.now();

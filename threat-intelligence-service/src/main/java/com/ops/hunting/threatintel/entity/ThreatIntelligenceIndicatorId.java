@@ -2,6 +2,7 @@ package com.ops.hunting.threatintel.entity;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -10,16 +11,16 @@ import jakarta.persistence.Embeddable;
 public class ThreatIntelligenceIndicatorId implements Serializable {
 
 	@Column(name = "threat_intelligence_id")
-	private String threatIntelligenceId;
+	private UUID threatIntelligenceId;
 
 	@Column(name = "indicator_id")
-	private String indicatorId;
+	private UUID indicatorId;
 
 	// Constructors
 	public ThreatIntelligenceIndicatorId() {
 	}
 
-	public ThreatIntelligenceIndicatorId(String threatIntelligenceId, String indicatorId) {
+	public ThreatIntelligenceIndicatorId(UUID threatIntelligenceId, UUID indicatorId) {
 		this.threatIntelligenceId = threatIntelligenceId;
 		this.indicatorId = indicatorId;
 	}
@@ -42,19 +43,19 @@ public class ThreatIntelligenceIndicatorId implements Serializable {
 	}
 
 	// Getters and setters
-	public String getThreatIntelligenceId() {
+	public UUID getThreatIntelligenceId() {
 		return threatIntelligenceId;
 	}
 
-	public void setThreatIntelligenceId(String threatIntelligenceId) {
+	public void setThreatIntelligenceId(UUID threatIntelligenceId) {
 		this.threatIntelligenceId = threatIntelligenceId;
 	}
 
-	public String getIndicatorId() {
+	public UUID getIndicatorId() {
 		return indicatorId;
 	}
 
-	public void setIndicatorId(String indicatorId) {
+	public void setIndicatorId(UUID indicatorId) {
 		this.indicatorId = indicatorId;
 	}
 }

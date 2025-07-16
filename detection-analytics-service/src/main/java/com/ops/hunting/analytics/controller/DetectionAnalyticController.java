@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -203,7 +204,7 @@ public class DetectionAnalyticController {
 
 	@PostMapping("/{id}/execute")
 	@PreAuthorize("hasAnyRole('ANALYST', 'ADMIN')")
-	public ResponseEntity<ResponseWrapper<String>> executeAnalytic(@PathVariable String id) {
+	public ResponseEntity<ResponseWrapper<String>> executeAnalytic(@PathVariable UUID id) {
 		try {
 			analyticService.executeAnalytic(id);
 			return ResponseEntity.ok(ResponseWrapper.success("Detection analytic executed successfully"));

@@ -2,6 +2,7 @@ package com.ops.hunting.alerts.entity;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -10,7 +11,7 @@ import jakarta.persistence.Embeddable;
 public class AlertIndicatorId implements Serializable {
 
 	@Column(name = "alert_id")
-	private String alertId;
+	private UUID alertId;
 
 	@Column(name = "indicator_id")
 	private String indicatorId;
@@ -19,7 +20,7 @@ public class AlertIndicatorId implements Serializable {
 	public AlertIndicatorId() {
 	}
 
-	public AlertIndicatorId(String alertId, String indicatorId) {
+	public AlertIndicatorId(UUID alertId, String indicatorId) {
 		this.alertId = alertId;
 		this.indicatorId = indicatorId;
 	}
@@ -41,11 +42,11 @@ public class AlertIndicatorId implements Serializable {
 	}
 
 	// Getters and setters
-	public String getAlertId() {
+	public UUID getAlertId() {
 		return alertId;
 	}
 
-	public void setAlertId(String alertId) {
+	public void setAlertId(UUID alertId) {
 		this.alertId = alertId;
 	}
 

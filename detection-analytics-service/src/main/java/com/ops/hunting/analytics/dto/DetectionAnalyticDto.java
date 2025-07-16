@@ -2,6 +2,7 @@ package com.ops.hunting.analytics.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.ops.hunting.common.enums.Platform;
 
@@ -12,7 +13,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class DetectionAnalyticDto {
 
-	private String id;
+	private UUID id;
 
 	@NotBlank(message = "Name is required")
 	private String name;
@@ -49,12 +50,12 @@ public class DetectionAnalyticDto {
 	}
 
 	// Getters and setters
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setId(UUID uuid) {
+		this.id = uuid;
 	}
 
 	public String getName() {

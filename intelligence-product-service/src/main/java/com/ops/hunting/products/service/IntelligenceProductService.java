@@ -234,7 +234,7 @@ public class IntelligenceProductService {
 		dto.setReviewComments(entity.getReviewComments());
 		dto.setTemplateUsed(entity.getTemplateUsed());
 		dto.setDistributionList(entity.getDistributionList());
-		dto.setCreatedDate(entity.getCreatedDate());
+		// dto.setCreatedDate(entity.getCreatedDate());
 		return dto;
 	}
 

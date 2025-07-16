@@ -1,6 +1,7 @@
 package com.ops.hunting.knowledge.entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
@@ -25,7 +26,7 @@ public class ArtifactTag {
 	private Artifact artifact;
 
 	@Column(name = "tag_id")
-	private String tagId;
+	private UUID tagId;
 
 	@Column(name = "tag_name")
 	private String tagName;
@@ -42,7 +43,7 @@ public class ArtifactTag {
 	public ArtifactTag() {
 	}
 
-	public ArtifactTag(Artifact artifact, String tagId, String tagName) {
+	public ArtifactTag(Artifact artifact, UUID tagId, String tagName) {
 		this.id = new ArtifactTagId(artifact.getId(), tagId);
 		this.artifact = artifact;
 		this.tagId = tagId;
@@ -66,11 +67,11 @@ public class ArtifactTag {
 		this.artifact = artifact;
 	}
 
-	public String getTagId() {
+	public UUID getTagId() {
 		return tagId;
 	}
 
-	public void setTagId(String tagId) {
+	public void setTagId(UUID tagId) {
 		this.tagId = tagId;
 	}
 

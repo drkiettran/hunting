@@ -1,15 +1,11 @@
 package com.ops.hunting.user.service;
 
-import com.ops.hunting.common.dto.UserDto;
-import com.ops.hunting.common.entity.User;
-import com.ops.hunting.common.enums.AnalystTier;
-import com.ops.hunting.common.enums.UserRole;
-import com.ops.hunting.user.dto.UserRegistrationDto;
-import com.ops.hunting.user.dto.UserLoginDto;
-import com.ops.hunting.user.dto.LoginResponseDto;
-import com.ops.hunting.user.repository.UserRepository;
-import com.ops.hunting.user.repository.UserCredentialRepository;
-import com.ops.hunting.user.entity.UserCredential;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,10 +15,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.ops.hunting.common.dto.UserDto;
+import com.ops.hunting.common.entity.User;
+import com.ops.hunting.common.enums.AnalystTier;
+import com.ops.hunting.common.enums.UserRole;
+import com.ops.hunting.user.dto.LoginResponseDto;
+import com.ops.hunting.user.dto.UserLoginDto;
+import com.ops.hunting.user.dto.UserRegistrationDto;
+import com.ops.hunting.user.entity.UserCredential;
+import com.ops.hunting.user.repository.UserCredentialRepository;
+import com.ops.hunting.user.repository.UserRepository;
 
 @Service
 @Transactional
@@ -57,9 +59,9 @@ public class UserService {
 		user.setUsername(registrationDto.getUsername());
 		user.setEmail(registrationDto.getEmail());
 		user.setRole(registrationDto.getRole());
-		user.setTier(registrationDto.getTier());
-		user.setDepartment(registrationDto.getDepartment());
-		user.setClearanceLevel(registrationDto.getClearanceLevel());
+		// user.setTier(registrationDto.getTier());
+		// user.setDepartment(registrationDto.getDepartment());
+		// user.setClearanceLevel(registrationDto.getClearanceLevel());
 		user.setIsActive(true);
 
 		User savedUser = userRepository.save(user);
@@ -84,7 +86,7 @@ public class UserService {
 			throw new RuntimeException("Account is disabled");
 		}
 
-		Optional<UserCredential> credentialOpt = credentialRepository.findByUserId(user.getId());
+		Optional<UserCredential> credentialOpt = credentialRepository.findByUserId(user.getId().toString());
 		if (credentialOpt.isEmpty()) {
 			throw new RuntimeException("Invalid credentials");
 		}
@@ -165,9 +167,9 @@ public class UserService {
 		User user = userOpt.get();
 		user.setEmail(userDto.getEmail());
 		user.setRole(userDto.getRole());
-		user.setTier(userDto.getTier());
-		user.setDepartment(userDto.getDepartment());
-		user.setClearanceLevel(userDto.getClearanceLevel());
+//		user.setTier(userDto.getTier());
+//		user.setDepartment(userDto.getDepartment());
+//		user.setClearanceLevel(userDto.getClearanceLevel());
 		user.setIsActive(userDto.getIsActive());
 
 		User savedUser = userRepository.save(user);
@@ -188,8 +190,8 @@ public class UserService {
 	}
 
 	@Transactional
-	public void changePassword(String userId, String oldPassword, String newPassword) {
-		Optional<UserCredential> credentialOpt = credentialRepository.findByUserId(userId);
+	public void changePassword(UUID uuid, String oldPassword, String newPassword) {
+		Optional<UserCredential> credentialOpt = credentialRepository.findByUserId(uuid.toString());
 		if (credentialOpt.isEmpty()) {
 			throw new RuntimeException("User credentials not found");
 		}
@@ -213,10 +215,10 @@ public class UserService {
 		dto.setRole(user.getRole());
 		dto.setIsActive(user.getIsActive());
 		dto.setLastLogin(user.getLastLogin());
-		dto.setTier(user.getTier());
-		dto.setDepartment(user.getDepartment());
-		dto.setClearanceLevel(user.getClearanceLevel());
-		dto.setCreatedDate(user.getCreatedDate());
+//		dto.setTier(user.getTier());
+//		dto.setDepartment(user.getDepartment());
+//		dto.setClearanceLevel(user.getClearanceLevel());
+		dto.setCreatedAt(user.getCreatedAt());
 		return dto;
 	}
 }

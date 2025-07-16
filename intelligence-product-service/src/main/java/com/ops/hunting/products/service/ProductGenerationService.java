@@ -81,7 +81,7 @@ public class ProductGenerationService {
 				contentStream.newLine();
 				contentStream.showText("Classification: " + product.getClassification());
 				contentStream.newLine();
-				contentStream.showText("Created: " + product.getCreatedDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
+				contentStream.showText("Created: " + product.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE));
 				if (product.getPublishedDate() != null) {
 					contentStream.newLine();
 					contentStream.showText(

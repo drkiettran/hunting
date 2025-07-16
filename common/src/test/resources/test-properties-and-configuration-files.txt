@@ -1,0 +1,345 @@
+# ===================================================================
+# APPLICATION-TEST.YML - Test Configuration
+# ===================================================================
+
+spring:
+  # Test Database Configuration
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    
+  # JPA Configuration for Testing
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        
+  # Redis Configuration for Testing (Embedded)
+  redis:
+    host: localhost
+    port: 6370  # Different port for test Redis
+    timeout: 2000ms
+    
+  # Kafka Configuration for Testing
+  kafka:
+    bootstrap-servers: localhost:9093  # Test Kafka port
+    consumer:
+      group-id: test-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      
+  # Security Configuration for Testing
+  security:
+    jwt:
+      secret: test-jwt-secret-key-for-unit-testing-only
+      expiration: 86400000  # 24 hours in milliseconds
+      
+  # Cache Configuration
+  cache:
+    redis:
+      time-to-live: 600000  # 10 minutes
+      cache-null-values: false
+      
+  # Elasticsearch Configuration for Testing
+  elasticsearch:
+    rest:
+      uris: http://localhost:9201  # Test Elasticsearch port
+
+# Application-specific configuration
+hunting:
+  security:
+    max-login-attempts: 3
+    lockout-duration: 300000  # 5 minutes
+    password-reset-expiry: 3600000  # 1 hour
+    
+  threat-intel:
+    cache-duration: 3600  # 1 hour
+    max-confidence-score: 100
+    default-expiry-days: 30
+    
+  alerts:
+    max-alert-age-days: 90
+    auto-close-resolved-after-days: 7
+    severity-levels:
+      - LOW
+      - MEDIUM
+      - HIGH
+      - CRITICAL
+      
+  investigation:
+    max-investigation-age-days: 365
+    auto-archive-closed-after-days: 30
+    max-evidence-file-size: 52428800  # 50MB
+    
+# Logging Configuration for Tests
+logging:
+  level:
+    com.hunting: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    
+# Management and Monitoring (disabled for tests)
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+    metrics:
+      enabled: false
+
+---
+# ===================================================================
+# BOOTSTRAP-TEST.YML - Bootstrap Configuration for Tests
+# ===================================================================
+
+spring:
+  application:
+    name: hunting-common-test
+  profiles:
+    active: test
+  cloud:
+    config:
+      enabled: false
+
+---
+# ===================================================================
+# LOGBACK-TEST.XML - Logging Configuration for Tests
+# ===================================================================
+
+# <?xml version="1.0" encoding="UTF-8"?>
+# <configuration>
+#     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+#     
+#     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+#         <encoder>
+#             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+#         </encoder>
+#     </appender>
+#     
+#     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+#         <file>target/test-logs/application.log</file>
+#         <encoder>
+#             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+#         </encoder>
+#     </appender>
+#     
+#     <logger name="com.hunting" level="DEBUG"/>
+#     <logger name="org.springframework" level="INFO"/>
+#     <logger name="org.hibernate" level="INFO"/>
+#     <logger name="org.testcontainers" level="INFO"/>
+#     
+#     <root level="INFO">
+#         <appender-ref ref="CONSOLE"/>
+#         <appender-ref ref="FILE"/>
+#     </root>
+# </configuration>
+
+---
+# ===================================================================
+# TEST PROFILES FOR DIFFERENT SCENARIOS
+# ===================================================================
+
+# Profile: integration-test
+---
+spring:
+  config:
+    activate:
+      on-profile: integration-test
+      
+  # Use real database for integration tests
+  datasource:
+    url: jdbc:testcontainers:mysql:8.0:///testdb
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    
+  # Use Testcontainers for external services
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+
+# Profile: performance-test  
+---
+spring:
+  config:
+    activate:
+      on-profile: performance-test
+      
+logging:
+  level:
+    com.hunting: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+
+# Profile: security-test
+---
+spring:
+  config:
+    activate:
+      on-profile: security-test
+      
+hunting:
+  security:
+    max-login-attempts: 2  # Lower threshold for security tests
+    lockout-duration: 60000  # 1 minute for faster testing
+    
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+---
+# ===================================================================
+# DOCKER-COMPOSE-TEST.YML - For Integration Testing
+# ===================================================================
+
+# version: '3.8'
+# services:
+#   mysql-test:
+#     image: mysql:8.0
+#     environment:
+#       MYSQL_ROOT_PASSWORD: testpassword
+#       MYSQL_DATABASE: hunting_test
+#       MYSQL_USER: testuser
+#       MYSQL_PASSWORD: testpass
+#     ports:
+#       - "3307:3306"
+#     tmpfs:
+#       - /var/lib/mysql
+#       
+#   redis-test:
+#     image: redis:7-alpine
+#     ports:
+#       - "6380:6379"
+#     command: redis-server --appendonly yes
+#     tmpfs:
+#       - /data
+#       
+#   kafka-test:
+#     image: confluentinc/cp-kafka:latest
+#     depends_on:
+#       - zookeeper-test
+#     environment:
+#       KAFKA_BROKER_ID: 1
+#       KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:2181
+#       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9094
+#       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#     ports:
+#       - "9094:9092"
+#       
+#   zookeeper-test:
+#     image: confluentinc/cp-zookeeper:latest
+#     environment:
+#       ZOOKEEPER_CLIENT_PORT: 2181
+#       ZOOKEEPER_TICK_TIME: 2000
+#     ports:
+#       - "2182:2181"
+#       
+#   elasticsearch-test:
+#     image: elasticsearch:8.8.0
+#     environment:
+#       - discovery.type=single-node
+#       - xpack.security.enabled=false
+#     ports:
+#       - "9201:9200"
+#     tmpfs:
+#       - /usr/share/elasticsearch/data
+
+---
+# ===================================================================
+# JUNIT PLATFORM PROPERTIES
+# ===================================================================
+
+# junit-platform.properties file content:
+# junit.jupiter.displayname.generator.default=org.junit.jupiter.api.DisplayNameGenerator$ReplaceUnderscores
+# junit.jupiter.execution.parallel.enabled=true
+# junit.jupiter.execution.parallel.mode.default=concurrent
+# junit.jupiter.execution.parallel.config.strategy=dynamic
+# junit.jupiter.execution.timeout.default=30s
+# junit.jupiter.execution.timeout.testmethod.default=10s
+
+---
+# ===================================================================
+# MOCKITO CONFIGURATION
+# ===================================================================
+
+# mockito-extensions/org.mockito.plugins.MockMaker file content:
+# mock-maker-inline
+
+---
+# ===================================================================
+# TEST DATA SETS
+# ===================================================================
+
+test-data:
+  threat-intelligence:
+    - ioc-type: "IP"
+      ioc-value: "192.168.1.100"
+      threat-level: "HIGH"
+      source: "Test Source 1"
+      confidence: 85
+      
+    - ioc-type: "DOMAIN"
+      ioc-value: "malicious.example.com"
+      threat-level: "CRITICAL"
+      source: "Test Source 2"
+      confidence: 95
+      
+    - ioc-type: "FILE_HASH"
+      ioc-value: "d41d8cd98f00b204e9800998ecf8427e"
+      threat-level: "MEDIUM"
+      source: "Test Source 3"
+      confidence: 70
+      
+  users:
+    - username: "test-admin"
+      email: "admin@test.com"
+      role: "ADMIN"
+      first-name: "Test"
+      last-name: "Admin"
+      
+    - username: "test-analyst"
+      email: "analyst@test.com"
+      role: "ANALYST"
+      first-name: "Test"
+      last-name: "Analyst"
+      
+  alerts:
+    - title: "Test Alert 1"
+      description: "Test suspicious activity"
+      severity: "HIGH"
+      rule-id: "TEST_RULE_001"
+      
+    - title: "Test Alert 2"
+      description: "Test malware detection"
+      severity: "CRITICAL"
+      rule-id: "TEST_RULE_002"
+
+---
+# ===================================================================
+# TESTCONTAINERS CONFIGURATION
+# ===================================================================
+
+testcontainers:
+  reuse:
+    enable: true
+  ryuk:
+    disabled: false
+    
+# Environment variables for Testcontainers
+# TC_PARALLEL_MODE=false
+# TC_DISABLE_CHECKS=true

@@ -1,17 +1,19 @@
 package com.ops.hunting.products.dto;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
 import com.ops.hunting.common.enums.Classification;
 import com.ops.hunting.common.enums.ProductType;
 import com.ops.hunting.products.entity.IntelligenceProduct;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 public class IntelligenceProductDto {
 
-	private String id;
+	private UUID id;
 
 	@NotBlank(message = "Title is required")
 	private String title;
@@ -59,12 +61,12 @@ public class IntelligenceProductDto {
 	}
 
 	// Getters and setters
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setId(UUID uuid) {
+		this.id = uuid;
 	}
 
 	public String getTitle() {

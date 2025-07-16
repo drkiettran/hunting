@@ -1,6 +1,7 @@
 package com.ops.hunting.products.entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
@@ -27,7 +28,7 @@ public class ProductSource {
 	private IntelligenceProduct product;
 
 	@Column(name = "source_id")
-	private String sourceId;
+	private UUID sourceId;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "source_type")
@@ -48,7 +49,7 @@ public class ProductSource {
 	public ProductSource() {
 	}
 
-	public ProductSource(IntelligenceProduct product, String sourceId, SourceType sourceType, String sourceTitle) {
+	public ProductSource(IntelligenceProduct product, UUID sourceId, SourceType sourceType, String sourceTitle) {
 		this.id = new ProductSourceId(product.getId(), sourceId);
 		this.product = product;
 		this.sourceId = sourceId;
@@ -73,11 +74,11 @@ public class ProductSource {
 		this.product = product;
 	}
 
-	public String getSourceId() {
+	public UUID getSourceId() {
 		return sourceId;
 	}
 
-	public void setSourceId(String sourceId) {
+	public void setSourceId(UUID sourceId) {
 		this.sourceId = sourceId;
 	}
 

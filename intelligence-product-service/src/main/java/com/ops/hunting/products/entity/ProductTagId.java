@@ -2,6 +2,7 @@ package com.ops.hunting.products.entity;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -10,7 +11,7 @@ import jakarta.persistence.Embeddable;
 public class ProductTagId implements Serializable {
 
 	@Column(name = "product_id")
-	private String productId;
+	private UUID productId;
 
 	@Column(name = "tag_id")
 	private String tagId;
@@ -19,7 +20,7 @@ public class ProductTagId implements Serializable {
 	public ProductTagId() {
 	}
 
-	public ProductTagId(String productId, String tagId) {
+	public ProductTagId(UUID productId, String tagId) {
 		this.productId = productId;
 		this.tagId = tagId;
 	}
@@ -41,11 +42,11 @@ public class ProductTagId implements Serializable {
 	}
 
 	// Getters and setters
-	public String getProductId() {
+	public UUID getProductId() {
 		return productId;
 	}
 
-	public void setProductId(String productId) {
+	public void setProductId(UUID productId) {
 		this.productId = productId;
 	}
 

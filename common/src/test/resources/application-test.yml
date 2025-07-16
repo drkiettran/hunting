@@ -1,0 +1,98 @@
+spring:
+  # Test Database Configuration
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    
+  # JPA Configuration for Testing
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        
+  # Redis Configuration for Testing (Embedded)
+  redis:
+    host: localhost
+    port: 6370  # Different port for test Redis
+    timeout: 2000ms
+    
+  # Kafka Configuration for Testing
+  kafka:
+    bootstrap-servers: localhost:9093  # Test Kafka port
+    consumer:
+      group-id: test-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      
+  # Security Configuration for Testing
+  security:
+    jwt:
+      secret: test-jwt-secret-key-for-unit-testing-only
+      expiration: 86400000  # 24 hours in milliseconds
+      
+  # Cache Configuration
+  cache:
+    redis:
+      time-to-live: 600000  # 10 minutes
+      cache-null-values: false
+      
+  # Elasticsearch Configuration for Testing
+  elasticsearch:
+    rest:
+      uris: http://localhost:9201  # Test Elasticsearch port
+
+# Application-specific configuration
+hunting:
+  security:
+    max-login-attempts: 3
+    lockout-duration: 300000  # 5 minutes
+    password-reset-expiry: 3600000  # 1 hour
+    
+  threat-intel:
+    cache-duration: 3600  # 1 hour
+    max-confidence-score: 100
+    default-expiry-days: 30
+    
+  alerts:
+    max-alert-age-days: 90
+    auto-close-resolved-after-days: 7
+    severity-levels:
+      - LOW
+      - MEDIUM
+      - HIGH
+      - CRITICAL
+      
+  investigation:
+    max-investigation-age-days: 365
+    auto-archive-closed-after-days: 30
+    max-evidence-file-size: 52428800  # 50MB
+    
+# Logging Configuration for Tests
+logging:
+  level:
+    com.hunting: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    
+# Management and Monitoring (disabled for tests)
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+    metrics:
+      enabled: false

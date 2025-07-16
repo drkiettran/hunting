@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -171,10 +172,10 @@ public class DetectionAnalyticService {
 	}
 
 	@Transactional
-	public void executeAnalytic(String id) {
-		Optional<DetectionAnalytic> analyticOpt = analyticRepository.findById(id);
+	public void executeAnalytic(UUID uuid) {
+		Optional<DetectionAnalytic> analyticOpt = analyticRepository.findById(uuid.toString());
 		if (analyticOpt.isEmpty()) {
-			throw new RuntimeException("Analytic not found with id: " + id);
+			throw new RuntimeException("Analytic not found with id: " + uuid.toString());
 		}
 
 		DetectionAnalytic analytic = analyticOpt.get();
@@ -308,7 +309,7 @@ public class DetectionAnalyticService {
 		dto.setAlertCount(entity.getAlertCount());
 		dto.setFalsePositiveCount(entity.getFalsePositiveCount());
 		dto.setFalsePositiveRate(entity.getFalsePositiveRate());
-		dto.setCreatedDate(entity.getCreatedDate());
+		// dto.setCreatedDate(entity.getCreatedDate());
 		return dto;
 	}
 
@@ -351,24 +352,24 @@ public class DetectionAnalyticService {
 	}
 
 	public static class AlertGeneratedEvent {
-		private String analyticId;
+		private UUID analyticId;
 		private int alertCount;
 		private String alertData;
 		private LocalDateTime timestamp;
 
-		public AlertGeneratedEvent(String analyticId, int alertCount, String alertData) {
-			this.analyticId = analyticId;
+		public AlertGeneratedEvent(UUID uuid, int alertCount, String alertData) {
+			this.analyticId = uuid;
 			this.alertCount = alertCount;
 			this.alertData = alertData;
 			this.timestamp = LocalDateTime.now();
 		}
 
 		// Getters and setters
-		public String getAnalyticId() {
+		public UUID getAnalyticId() {
 			return analyticId;
 		}
 
-		public void setAnalyticId(String analyticId) {
+		public void setAnalyticId(UUID analyticId) {
 			this.analyticId = analyticId;
 		}
 

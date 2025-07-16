@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: hunting-common-test
+  profiles:
+    active: test
+  cloud:
+    config:
+      enabled: false

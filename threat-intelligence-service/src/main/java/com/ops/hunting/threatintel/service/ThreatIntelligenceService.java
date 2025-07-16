@@ -175,8 +175,8 @@ public class ThreatIntelligenceService {
 		dto.setSeverity(entity.getSeverity());
 		dto.setDiscoveredDate(entity.getDiscoveredDate());
 		dto.setReportedBy(entity.getReportedBy());
-		dto.setCreatedDate(entity.getCreatedDate());
-		dto.setUpdatedDate(entity.getUpdatedDate());
+		dto.setCreatedDate(entity.getCreatedAt());
+		dto.setUpdatedDate(entity.getUpdatedAt());
 
 		// Load indicators if needed
 		if (entity.getIndicators() != null && !entity.getIndicators().isEmpty()) {

@@ -2,6 +2,7 @@ package com.ops.hunting.threatintel.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.ops.hunting.common.enums.IndicatorType;
 
@@ -12,7 +13,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class IndicatorDto {
 
-	private String id;
+	private UUID id;
 
 	@NotNull(message = "Indicator type is required")
 	private IndicatorType type;
@@ -40,12 +41,12 @@ public class IndicatorDto {
 	}
 
 	// Getters and setters
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setId(UUID uuid) {
+		this.id = uuid;
 	}
 
 	public IndicatorType getType() {

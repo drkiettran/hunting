@@ -115,7 +115,7 @@ public class IndicatorService {
 		dto.setValue(entity.getValue());
 		dto.setDescription(entity.getDescription());
 		dto.setConfidence(entity.getConfidence());
-		dto.setCreatedDate(entity.getCreatedDate());
+		dto.setCreatedDate(entity.getCreatedAt());
 		return dto;
 	}
 }

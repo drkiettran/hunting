@@ -1,0 +1,191 @@
+<!-- ===================================================================
+     MAVEN POM.XML DEPENDENCIES FOR TESTING
+     ================================================================== -->
+
+<!-- Add these dependencies to your common module's pom.xml -->
+<dependencies>
+    <!-- Spring Boot Test Starter -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- JUnit 5 -->
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- Mockito for mocking -->
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-junit-jupiter</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- AssertJ for fluent assertions -->
+    <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- Testcontainers for integration testing -->
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>mysql</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>kafka</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- WireMock for HTTP service mocking -->
+    <dependency>
+        <groupId>com.github.tomakehurst</groupId>
+        <artifactId>wiremock-jre8</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- Bean Validation Testing -->
+    <dependency>
+        <groupId>org.hibernate.validator</groupId>
+        <artifactId>hibernate-validator</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- JSON Path for JSON testing -->
+    <dependency>
+        <groupId>com.jayway.jsonpath</groupId>
+        <artifactId>json-path</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- Spring Security Test -->
+    <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- Awaitility for asynchronous testing -->
+    <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <!-- Spring Boot Testcontainers -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-testcontainers</artifactId>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+
+<!-- Maven Surefire Plugin Configuration -->
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.0.0-M9</version>
+            <configuration>
+                <includes>
+                    <include>**/*Test.java</include>
+                    <include>**/*Tests.java</include>
+                    <include>**/*IT.java</include>
+                </includes>
+                <excludes>
+                    <exclude>**/*IntegrationTest.java</exclude>
+                </excludes>
+                <properties>
+                    <configurationParameters>
+                        junit.jupiter.displayname.generator.default=org.junit.jupiter.api.DisplayNameGenerator$ReplaceUnderscores
+                        junit.jupiter.execution.parallel.enabled=true
+                        junit.jupiter.execution.parallel.mode.default=concurrent
+                    </configurationParameters>
+                </properties>
+            </configuration>
+        </plugin>
+        
+        <!-- Failsafe Plugin for Integration Tests -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>3.0.0-M9</version>
+            <configuration>
+                <includes>
+                    <include>**/*IT.java</include>
+                    <include>**/*IntegrationTest.java</include>
+                </includes>
+            </configuration>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        
+        <!-- JaCoCo for Code Coverage -->
+        <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.8</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>prepare-agent</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>report</id>
+                    <phase>test</phase>
+                    <goals>
+                        <goal>report</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>check</id>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                    <configuration>
+                        <rules>
+                            <rule>
+                                <element>PACKAGE</element>
+                                <limits>
+                                    <limit>
+                                        <counter>LINE</counter>
+                                        <value>COVEREDRATIO</value>
+                                        <minimum>0.80</minimum>
+                                    </limit>
+                                </limits>
+                            </rule>
+                        </rules>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>

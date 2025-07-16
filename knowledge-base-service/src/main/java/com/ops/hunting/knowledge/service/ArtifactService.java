@@ -229,7 +229,7 @@ public class ArtifactService {
 		dto.setStorageLocation(entity.getStorageLocation());
 		dto.setIsArchived(entity.getIsArchived());
 		dto.setMetadata(entity.getMetadata());
-		dto.setCreatedDate(entity.getCreatedDate());
+		dto.setCreatedDate(entity.getCreatedAt());
 		return dto;
 	}
 

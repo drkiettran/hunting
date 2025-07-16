@@ -1,15 +1,22 @@
 package com.ops.hunting.user.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "user_credentials")
 public class UserCredential {
 
 	@Id
-	private String userId;
+	private UUID userId;
 
 	@NotBlank
 	@Column(nullable = false)
@@ -53,18 +60,18 @@ public class UserCredential {
 	public UserCredential() {
 	}
 
-	public UserCredential(String userId, String passwordHash) {
+	public UserCredential(UUID userId, String passwordHash) {
 		this.userId = userId;
 		this.passwordHash = passwordHash;
 	}
 
 	// Getters and setters
-	public String getUserId() {
+	public UUID getUserId() {
 		return userId;
 	}
 
-	public void setUserId(String userId) {
-		this.userId = userId;
+	public void setUserId(UUID uuid) {
+		this.userId = uuid;
 	}
 
 	public String getPasswordHash() {

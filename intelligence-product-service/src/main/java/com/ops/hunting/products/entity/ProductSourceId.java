@@ -2,6 +2,7 @@ package com.ops.hunting.products.entity;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -10,16 +11,16 @@ import jakarta.persistence.Embeddable;
 public class ProductSourceId implements Serializable {
 
 	@Column(name = "product_id")
-	private String productId;
+	private UUID productId;
 
 	@Column(name = "source_id")
-	private String sourceId;
+	private UUID sourceId;
 
 	// Constructors
 	public ProductSourceId() {
 	}
 
-	public ProductSourceId(String productId, String sourceId) {
+	public ProductSourceId(UUID productId, UUID sourceId) {
 		this.productId = productId;
 		this.sourceId = sourceId;
 	}
@@ -41,19 +42,19 @@ public class ProductSourceId implements Serializable {
 	}
 
 	// Getters and setters
-	public String getProductId() {
+	public UUID getProductId() {
 		return productId;
 	}
 
-	public void setProductId(String productId) {
+	public void setProductId(UUID productId) {
 		this.productId = productId;
 	}
 
-	public String getSourceId() {
+	public UUID getSourceId() {
 		return sourceId;
 	}
 
-	public void setSourceId(String sourceId) {
+	public void setSourceId(UUID sourceId) {
 		this.sourceId = sourceId;
 	}
 }

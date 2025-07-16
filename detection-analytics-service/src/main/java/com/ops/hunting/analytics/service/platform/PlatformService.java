@@ -1,14 +1,16 @@
 package com.ops.hunting.analytics.service.platform;
 
+import java.util.UUID;
+
 import com.ops.hunting.common.enums.Platform;
 
 public interface PlatformService {
 
 	Platform getSupportedPlatform();
 
-	void deployAnalytic(String analyticId, String query);
+	void deployAnalytic(UUID uuid, String query);
 
-	void undeployAnalytic(String analyticId);
+	void undeployAnalytic(UUID uuid);
 
 	QueryResult executeQuery(String query);
 

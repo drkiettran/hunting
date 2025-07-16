@@ -2,6 +2,7 @@ package com.ops.hunting.knowledge.entity;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -10,16 +11,16 @@ import jakarta.persistence.Embeddable;
 public class ArtifactTagId implements Serializable {
 
 	@Column(name = "artifact_id")
-	private String artifactId;
+	private UUID artifactId;
 
 	@Column(name = "tag_id")
-	private String tagId;
+	private UUID tagId;
 
 	// Constructors
 	public ArtifactTagId() {
 	}
 
-	public ArtifactTagId(String artifactId, String tagId) {
+	public ArtifactTagId(UUID artifactId, UUID tagId) {
 		this.artifactId = artifactId;
 		this.tagId = tagId;
 	}
@@ -41,19 +42,19 @@ public class ArtifactTagId implements Serializable {
 	}
 
 	// Getters and setters
-	public String getArtifactId() {
+	public UUID getArtifactId() {
 		return artifactId;
 	}
 
-	public void setArtifactId(String artifactId) {
+	public void setArtifactId(UUID artifactId) {
 		this.artifactId = artifactId;
 	}
 
-	public String getTagId() {
+	public UUID getTagId() {
 		return tagId;
 	}
 
-	public void setTagId(String tagId) {
+	public void setTagId(UUID tagId) {
 		this.tagId = tagId;
 	}
 }

@@ -51,7 +51,7 @@ public class SearchService {
 		try {
 			Map<String, Object> document = createArtifactDocument(artifact);
 
-			IndexRequest request = new IndexRequest(ARTIFACT_INDEX).id(artifact.getId()).source(document,
+			IndexRequest request = new IndexRequest(ARTIFACT_INDEX).id(artifact.getId().toString()).source(document,
 					XContentType.JSON);
 
 			elasticsearchClient.index(request, RequestOptions.DEFAULT);
@@ -144,7 +144,7 @@ public class SearchService {
 		document.put("investigationId", artifact.getInvestigationId());
 		document.put("fileSize", artifact.getFileSize());
 		document.put("contentType", artifact.getContentType());
-		document.put("createdDate", artifact.getCreatedDate());
+		document.put("createdDate", artifact.getCreatedAt());
 		document.put("isArchived", artifact.getIsArchived());
 
 		// Add metadata

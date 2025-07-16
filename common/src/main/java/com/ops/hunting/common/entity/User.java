@@ -1,116 +1,88 @@
 package com.ops.hunting.common.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
-import com.ops.hunting.common.enums.AnalystTier;
 import com.ops.hunting.common.enums.UserRole;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(callSuper = true)
 public class User extends BaseEntity {
 
-	@NotBlank
-	@Column(unique = true, nullable = false)
+	@NotBlank(message = "Username is required")
+	@Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+	@Column(name = "username", nullable = false, unique = true)
 	private String username;
 
-	@Email
-	@NotBlank
-	@Column(unique = true, nullable = false)
+	@NotBlank(message = "Email is required")
+	@Email(message = "Email format is invalid")
+	@Column(name = "email", nullable = false, unique = true)
 	private String email;
 
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
+	@NotBlank(message = "Password is required")
+	@Column(name = "password_hash", nullable = false)
+	private String passwordHash;
+
+	@NotBlank(message = "First name is required")
+	@Column(name = "first_name", nullable = false)
+	private String firstName;
+
+	@NotBlank(message = "Last name is required")
+	@Column(name = "last_name", nullable = false)
+	private String lastName;
+
+	@NotBlank(message = "Role is required")
+	@Column(name = "role", nullable = false)
 	private UserRole role;
 
 	@Column(name = "is_active")
+	@Builder.Default
 	private Boolean isActive = true;
 
 	@Column(name = "last_login")
 	private LocalDateTime lastLogin;
 
-	@Enumerated(EnumType.STRING)
-	private AnalystTier tier;
+	@Column(name = "failed_login_attempts")
+	@Builder.Default
+	private Integer failedLoginAttempts = 0;
 
-	private String department;
+	@Column(name = "locked_until")
+	private LocalDateTime lockedUntil;
 
-	@Column(name = "clearance_level")
-	private String clearanceLevel;
+	@Column(name = "password_reset_token")
+	private String passwordResetToken;
 
-	// Constructors
-	public User() {
+	@Column(name = "password_reset_expires")
+	private LocalDateTime passwordResetExpires;
+
+	public boolean isLocked() {
+		return lockedUntil != null && LocalDateTime.now().isBefore(lockedUntil);
 	}
 
-	public User(String username, String email, UserRole role) {
-		this.username = username;
-		this.email = email;
-		this.role = role;
+	public boolean isPasswordResetTokenValid() {
+		return passwordResetToken != null && passwordResetExpires != null
+				&& LocalDateTime.now().isBefore(passwordResetExpires);
 	}
 
-	// Getters and setters
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public UserRole getRole() {
-		return role;
-	}
-
-	public void setRole(UserRole role) {
-		this.role = role;
-	}
-
-	public Boolean getIsActive() {
-		return isActive;
-	}
-
-	public void setIsActive(Boolean isActive) {
-		this.isActive = isActive;
-	}
-
-	public LocalDateTime getLastLogin() {
-		return lastLogin;
-	}
-
-	public void setLastLogin(LocalDateTime lastLogin) {
-		this.lastLogin = lastLogin;
-	}
-
-	public AnalystTier getTier() {
-		return tier;
-	}
-
-	public void setTier(AnalystTier tier) {
-		this.tier = tier;
-	}
-
-	public String getDepartment() {
-		return department;
-	}
-
-	public void setDepartment(String department) {
-		this.department = department;
-	}
-
-	public String getClearanceLevel() {
-		return clearanceLevel;
-	}
-
-	public void setClearanceLevel(String clearanceLevel) {
-		this.clearanceLevel = clearanceLevel;
+	public String getFullName() {
+		return firstName + " " + lastName;
 	}
 }

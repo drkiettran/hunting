@@ -2,6 +2,7 @@ package com.ops.hunting.threatintel.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import com.ops.hunting.common.enums.SeverityLevel;
 import com.ops.hunting.common.enums.ThreatType;
@@ -11,7 +12,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class ThreatIntelligenceDto {
 
-	private String id;
+	private UUID id;
 
 	@NotBlank(message = "Source is required")
 	private String source;
@@ -43,12 +44,12 @@ public class ThreatIntelligenceDto {
 	}
 
 	// Getters and setters
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setId(UUID uuid) {
+		this.id = uuid;
 	}
 
 	public String getSource() {

@@ -1,17 +1,24 @@
 package com.ops.hunting.analytics.entity;
 
-import com.ops.hunting.common.entity.BaseEntity;
-import com.ops.hunting.common.enums.Platform;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.ops.hunting.common.entity.BaseEntity;
+import com.ops.hunting.common.enums.Platform;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "detection_analytics")
@@ -19,7 +26,7 @@ public class DetectionAnalytic extends BaseEntity {
 
 	@NotBlank
 	@Column(nullable = false, length = 200)
-	private String name;
+	private @NotBlank String name;
 
 	@NotBlank
 	@Column(columnDefinition = "TEXT", nullable = false)
@@ -70,7 +77,8 @@ public class DetectionAnalytic extends BaseEntity {
 	public DetectionAnalytic() {
 	}
 
-	public DetectionAnalytic(String name, String description, String queryText, Platform platform, String createdBy) {
+	public DetectionAnalytic(@NotBlank String name, String description, String queryText, Platform platform,
+			String createdBy) {
 		this.name = name;
 		this.description = description;
 		this.queryText = queryText;
@@ -106,12 +114,12 @@ public class DetectionAnalytic extends BaseEntity {
 	}
 
 	// Getters and setters
-	public String getName() {
+	public @NotBlank String getName() {
 		return name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setName(@NotBlank String string) {
+		this.name = string;
 	}
 
 	public String getDescription() {
