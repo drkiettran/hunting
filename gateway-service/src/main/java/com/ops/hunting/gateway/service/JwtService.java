@@ -1,18 +1,20 @@
 package com.ops.hunting.gateway.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
-
-import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import reactor.core.publisher.Mono;
 
 @Service
 public class JwtService {
@@ -38,8 +40,8 @@ public class JwtService {
 	public Mono<Boolean> validateToken(String token) {
 		return Mono.fromCallable(() -> {
 			try {
-				Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
-				// Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
+				// Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
+				Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
 				return true;
 			} catch (Exception e) {
 				return false;
@@ -57,8 +59,8 @@ public class JwtService {
 	}
 
 	private Claims extractClaims(String token) {
-		return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
 		// return
-		// Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
+		// Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
+		return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
 	}
 }
